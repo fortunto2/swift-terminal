@@ -1,10 +1,16 @@
 # SwiftTerminal
 
-Swift-based terminal application.
+Lightweight iOS SSH client with one-tap VPS provisioning for Claude Code.
 
 ## Requirements
-- Swift 5.9+
-- macOS 14+ / iOS 17+
+- Swift 6.2
+- macOS 15+ / iOS 18+
+- Xcode 16+
+
+## Tech Stack
+- **SSH:** SwiftNIO SSH + Citadel
+- **Terminal:** SwiftTerm
+- **Key Storage:** iOS Keychain + Secure Enclave
 
 ## Build & Run
 ```bash
