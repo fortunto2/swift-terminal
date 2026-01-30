@@ -1,5 +1,5 @@
 import Foundation
-import Citadel
+@preconcurrency import Citadel
 
 /// Manages SSH connections using Citadel.
 @MainActor
@@ -7,7 +7,7 @@ import Citadel
 final class SSHService {
     private(set) var isConnected = false
     private(set) var currentServer: Server?
-    private var client: SSHClient?
+    nonisolated(unsafe) private var client: SSHClient?
 
     /// Connect to a server using password authentication.
     func connect(to server: Server, password: String) async throws {
