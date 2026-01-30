@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// App settings — appearance, defaults, about.
-struct SettingsView: View {
+public struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage("defaultPort") private var defaultPort = 22
@@ -10,7 +10,7 @@ struct SettingsView: View {
     @AppStorage("requireBiometrics") private var requireBiometrics = true
     @AppStorage("autoReconnect") private var autoReconnect = true
 
-    var body: some View {
+    public var body: some View {
         Form {
             Section("Connection Defaults") {
                 HStack {

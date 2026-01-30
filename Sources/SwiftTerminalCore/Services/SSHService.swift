@@ -4,7 +4,7 @@ import Foundation
 /// Manages SSH connections using Citadel.
 @MainActor
 @Observable
-final class SSHService {
+public final class SSHService {
     private(set) var isConnected = false
     private(set) var currentServer: Server?
     nonisolated(unsafe) private var client: SSHClient?
@@ -68,11 +68,11 @@ final class SSHService {
 
 // MARK: - Errors
 
-enum SSHServiceError: LocalizedError {
-    case notConnected
-    case authenticationFailed
-    case connectionTimeout
-    case commandFailed(String)
+public enum SSHServiceError: LocalizedError {
+    public case notConnected
+    public case authenticationFailed
+    public case connectionTimeout
+    public case commandFailed(String)
 
     var errorDescription: String? {
         switch self {

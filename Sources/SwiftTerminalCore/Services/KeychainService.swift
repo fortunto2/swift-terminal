@@ -2,14 +2,14 @@ import Foundation
 import Security
 
 /// Wrapper around iOS Keychain for storing SSH keys and credentials.
-struct KeychainService: Sendable {
+public struct KeychainService: Sendable {
     /// Service identifier for Keychain items.
     private static let service = "com.swiftterminal"
 
     // MARK: - Save
 
     /// Save data to the Keychain.
-    static func save(key: String, data: Data) throws {
+    public static func save(key: String, data: Data) throws {
         // Delete existing item first
         try? delete(key: key)
 
@@ -28,7 +28,7 @@ struct KeychainService: Sendable {
     }
 
     /// Save a string to the Keychain.
-    static func save(key: String, string: String) throws {
+    public static func save(key: String, string: String) throws {
         guard let data = string.data(using: .utf8) else {
             throw KeychainError.encodingFailed
         }
@@ -38,7 +38,7 @@ struct KeychainService: Sendable {
     // MARK: - Load
 
     /// Load data from the Keychain.
-    static func load(key: String) throws -> Data? {
+    public static func load(key: String) throws -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -61,7 +61,7 @@ struct KeychainService: Sendable {
     }
 
     /// Load a string from the Keychain.
-    static func loadString(key: String) throws -> String? {
+    public static func loadString(key: String) throws -> String? {
         guard let data = try load(key: key) else { return nil }
         return String(data: data, encoding: .utf8)
     }
@@ -69,7 +69,7 @@ struct KeychainService: Sendable {
     // MARK: - Delete
 
     /// Delete an item from the Keychain.
-    static func delete(key: String) throws {
+    public static func delete(key: String) throws {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -85,7 +85,7 @@ struct KeychainService: Sendable {
     // MARK: - SSH Key Operations
 
     /// Save a private key to the Keychain with biometric protection.
-    static func savePrivateKey(_ privateKey: String, tag: String, requireBiometrics: Bool = true) throws {
+    public static func savePrivateKey(_ privateKey: String, tag: String, requireBiometrics: Bool = true) throws {
         var accessFlags: SecAccessControlCreateFlags = [.privateKeyUsage]
         if requireBiometrics {
             accessFlags.insert(.biometryCurrentSet)
@@ -123,7 +123,7 @@ struct KeychainService: Sendable {
     }
 
     /// Load a private key from the Keychain (may trigger biometric prompt).
-    static func loadPrivateKey(tag: String) throws -> String? {
+    public static func loadPrivateKey(tag: String) throws -> String? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -152,12 +152,12 @@ struct KeychainService: Sendable {
 
 // MARK: - Errors
 
-enum KeychainError: LocalizedError {
-    case saveFailed(OSStatus)
-    case loadFailed(OSStatus)
-    case deleteFailed(OSStatus)
-    case encodingFailed
-    case biometricCanceled
+public enum KeychainError: LocalizedError {
+    public case saveFailed(OSStatus)
+    public case loadFailed(OSStatus)
+    public case deleteFailed(OSStatus)
+    public case encodingFailed
+    public case biometricCanceled
 
     var errorDescription: String? {
         switch self {

@@ -1,9 +1,9 @@
 import Foundation
 
 /// Shell script templates for VPS provisioning.
-enum ProvisioningScripts {
+public enum ProvisioningScripts {
     /// Get the provisioning script for a feature.
-    static func script(
+    public static func script(
         for feature: ProvisioningFeature,
         username: String = "deploy",
         sshPort: Int = 2222
@@ -25,7 +25,7 @@ enum ProvisioningScripts {
     }
 
     /// Get all scripts for a provisioning config, concatenated.
-    static func fullScript(for config: ProvisioningConfig) -> String {
+    public static func fullScript(for config: ProvisioningConfig) -> String {
         let header = """
         #!/bin/bash
         set -euo pipefail
@@ -64,7 +64,7 @@ enum ProvisioningScripts {
     // MARK: - Individual Scripts
 
     /// Security hardening: create deploy user, harden SSH, install fail2ban, configure UFW.
-    static func securityHardening(username: String = "deploy", sshPort: Int = 2222) -> String {
+    public static func securityHardening(username: String = "deploy", sshPort: Int = 2222) -> String {
         """
         echo "🔒 Security Hardening..."
 
@@ -140,7 +140,7 @@ enum ProvisioningScripts {
     }
 
     /// Install Claude Code CLI.
-    static var claudeCodeInstall: String {
+    public static var claudeCodeInstall: String {
         """
         echo "🧠 Installing Claude Code..."
 
@@ -171,7 +171,7 @@ enum ProvisioningScripts {
     }
 
     /// Install dev tools (ripgrep, tmux, git, etc.).
-    static var devToolsInstall: String {
+    public static var devToolsInstall: String {
         """
         echo "🛠️ Installing dev tools..."
 
@@ -207,7 +207,7 @@ enum ProvisioningScripts {
     }
 
     /// Install Docker Engine and Docker Compose.
-    static var dockerInstall: String {
+    public static var dockerInstall: String {
         """
         echo "🐳 Installing Docker..."
 
@@ -235,7 +235,7 @@ enum ProvisioningScripts {
     }
 
     /// Install uv (fast Python package manager).
-    static var uvInstall: String {
+    public static var uvInstall: String {
         """
         echo "⚡ Installing uv..."
 
@@ -251,7 +251,7 @@ enum ProvisioningScripts {
     }
 
     /// Install Bun (fast JavaScript runtime).
-    static var bunInstall: String {
+    public static var bunInstall: String {
         """
         echo "🍞 Installing Bun..."
 

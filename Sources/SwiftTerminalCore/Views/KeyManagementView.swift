@@ -1,14 +1,14 @@
 import SwiftUI
 
 /// Manage SSH keys — generate, import, list, and delete.
-struct KeyManagementView: View {
+public struct KeyManagementView: View {
     @Environment(ServerStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
     @State private var showingGenerateSheet = false
     @State private var showingImportSheet = false
 
-    var body: some View {
+    public var body: some View {
         Group {
             if store.sshKeys.isEmpty {
                 emptyState
@@ -120,7 +120,7 @@ private struct GenerateKeyView: View {
     @State private var keyType: SSHKeyType = .ed25519
     @State private var isGenerating = false
 
-    var body: some View {
+    public var body: some View {
         Form {
             Section("Key Details") {
                 TextField("Key Name", text: $name, prompt: Text("My SSH Key"))
@@ -199,7 +199,7 @@ private struct ImportKeyView: View {
     @State private var publicKey = ""
     @State private var privateKey = ""
 
-    var body: some View {
+    public var body: some View {
         Form {
             Section("Key Details") {
                 TextField("Key Name", text: $name, prompt: Text("Imported Key"))

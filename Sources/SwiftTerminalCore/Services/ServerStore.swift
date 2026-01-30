@@ -4,14 +4,14 @@ import SwiftUI
 /// Persistent store for servers and SSH keys. Uses JSON + UserDefaults for MVP.
 @MainActor
 @Observable
-final class ServerStore {
+public final class ServerStore {
     private static let serversKey = "com.swiftterminal.servers"
     private static let keysKey = "com.swiftterminal.sshkeys"
 
     private(set) var servers: [Server] = []
     private(set) var sshKeys: [SSHKey] = []
 
-    init() {
+    public init() {
         loadServers()
         loadKeys()
     }

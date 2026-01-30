@@ -1,12 +1,12 @@
 import Foundation
 
 /// Cloud provider for VPS provisioning.
-enum CloudProvider: String, Codable, Sendable, CaseIterable, Identifiable {
-    case hetzner
-    case digitalOcean
-    case linode
-    case vultr
-    case custom
+public enum CloudProvider: String, Codable, Sendable, CaseIterable, Identifiable {
+    public case hetzner
+    public case digitalOcean
+    public case linode
+    public case vultr
+    public case custom
 
     var id: String { rawValue }
 
@@ -32,13 +32,13 @@ enum CloudProvider: String, Codable, Sendable, CaseIterable, Identifiable {
 }
 
 /// Feature that can be installed during provisioning.
-enum ProvisioningFeature: String, Codable, Sendable, CaseIterable, Identifiable {
-    case securityHardening
-    case claudeCode
-    case devTools
-    case docker
-    case uv
-    case bun
+public enum ProvisioningFeature: String, Codable, Sendable, CaseIterable, Identifiable {
+    public case securityHardening
+    public case claudeCode
+    public case devTools
+    public case docker
+    public case uv
+    public case bun
 
     var id: String { rawValue }
 
@@ -77,15 +77,15 @@ enum ProvisioningFeature: String, Codable, Sendable, CaseIterable, Identifiable 
 }
 
 /// Status of a provisioning step.
-enum ProvisioningStepStatus: Sendable, Equatable {
-    case pending
-    case running
-    case completed
-    case failed(String)
+public enum ProvisioningStepStatus: Sendable, Equatable {
+    public case pending
+    public case running
+    public case completed
+    public case failed(String)
 }
 
 /// A single step in the provisioning process.
-struct ProvisioningStep: Identifiable, Sendable {
+public struct ProvisioningStep: Identifiable, Sendable {
     let id: UUID
     let feature: ProvisioningFeature
     var status: ProvisioningStepStatus
@@ -98,7 +98,7 @@ struct ProvisioningStep: Identifiable, Sendable {
 }
 
 /// Configuration for provisioning a new VPS.
-struct ProvisioningConfig: Codable, Sendable {
+public struct ProvisioningConfig: Codable, Sendable {
     var provider: CloudProvider
     var region: String
     var size: String
@@ -127,9 +127,9 @@ struct ProvisioningConfig: Codable, Sendable {
 }
 
 extension ProvisioningConfig {
-    static let `default` = ProvisioningConfig()
+    public static let `default` = ProvisioningConfig()
 
-    static let preview = ProvisioningConfig(
+    public static let preview = ProvisioningConfig(
         provider: .hetzner,
         hostname: "my-dev-server",
         features: [.securityHardening, .claudeCode, .devTools, .docker]

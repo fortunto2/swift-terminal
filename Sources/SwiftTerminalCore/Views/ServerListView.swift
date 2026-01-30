@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Main view — shows a list of saved servers with connection actions.
-struct ServerListView: View {
+public struct ServerListView: View {
     @Environment(ServerStore.self) private var store
     @State private var showingAddServer = false
     @State private var showingSettings = false
@@ -21,7 +21,7 @@ struct ServerListView: View {
         }
     }
 
-    var body: some View {
+    public var body: some View {
         Group {
             if store.servers.isEmpty {
                 emptyState
@@ -123,7 +123,7 @@ private struct ServerRow: View {
     let server: Server
     let onConnect: () -> Void
 
-    var body: some View {
+    public var body: some View {
         Button(action: onConnect) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {

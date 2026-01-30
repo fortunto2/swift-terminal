@@ -1,10 +1,10 @@
 import Foundation
 
 /// Authentication method for SSH connections.
-enum AuthMethod: String, Codable, Sendable, CaseIterable, Identifiable {
-    case password
-    case key
-    case agent
+public enum AuthMethod: String, Codable, Sendable, CaseIterable, Identifiable {
+    public case password
+    public case key
+    public case agent
 
     var id: String { rawValue }
 
@@ -26,7 +26,7 @@ enum AuthMethod: String, Codable, Sendable, CaseIterable, Identifiable {
 }
 
 /// A saved SSH server configuration.
-struct Server: Codable, Identifiable, Sendable, Hashable {
+public struct Server: Codable, Identifiable, Sendable, Hashable {
     var id: UUID
     var name: String
     var host: String
@@ -74,14 +74,14 @@ extension Server {
     }
 
     /// Sample servers for previews and testing.
-    static let preview = Server(
+    public static let preview = Server(
         name: "Dev Server",
         host: "192.168.1.100",
         username: "deploy",
         tags: ["dev", "claude"]
     )
 
-    static let previewList: [Server] = [
+    public static let previewList: [Server] = [
         Server(name: "Production", host: "prod.example.com", port: 2222, username: "deploy", tags: ["prod"]),
         Server(name: "Staging", host: "staging.example.com", username: "deploy", tags: ["staging"]),
         Server(name: "Dev Box", host: "192.168.1.50", username: "rustam", tags: ["dev", "claude"]),

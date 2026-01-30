@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// Form for adding or editing an SSH server.
-struct AddServerView: View {
+public struct AddServerView: View {
     @Environment(ServerStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
@@ -26,7 +26,7 @@ struct AddServerView: View {
         port > 0 && port <= 65535
     }
 
-    var body: some View {
+    public var body: some View {
         Form {
             Section("Connection") {
                 TextField("Name", text: $name, prompt: Text("My Server"))

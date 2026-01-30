@@ -3,7 +3,7 @@ import Foundation
 /// Manages VPS provisioning — runs scripts over SSH to set up a new server.
 @MainActor
 @Observable
-final class ProvisioningService {
+public final class ProvisioningService {
     private let ssh: SSHService
 
     private(set) var steps: [ProvisioningStep] = []

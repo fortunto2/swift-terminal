@@ -4,7 +4,7 @@ import UIKit
 import SwiftTerm
 
 /// SwiftUI wrapper around SwiftTerm's TerminalView for interactive SSH sessions.
-struct TerminalView: View {
+public struct TerminalView: View {
     let server: Server
 
     @State private var sshService = SSHService()
@@ -18,7 +18,7 @@ struct TerminalView: View {
         case failed
     }
 
-    var body: some View {
+    public var body: some View {
         ZStack {
             Color.black.ignoresSafeArea()
 
@@ -117,7 +117,7 @@ struct TerminalView: View {
 
 // MARK: - UIViewRepresentable for SwiftTerm
 
-struct TerminalViewRepresentable: UIViewRepresentable {
+public struct TerminalViewRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> SwiftTerm.TerminalView {
         let terminalView = SwiftTerm.TerminalView(frame: .zero)
         terminalView.backgroundColor = .black
@@ -151,17 +151,17 @@ struct TerminalViewRepresentable: UIViewRepresentable {
 // macOS stub — SwiftTerm terminal view requires UIKit on iOS
 import SwiftUI
 
-struct TerminalView: View {
+public struct TerminalView: View {
     let server: Server
 
-    var body: some View {
+    public var body: some View {
         Text("Terminal view requires iOS")
             .navigationTitle(server.name)
     }
 }
 
-struct TerminalViewRepresentable: View {
-    var body: some View {
+public struct TerminalViewRepresentable: View {
+    public var body: some View {
         Text("Terminal requires UIKit")
     }
 }

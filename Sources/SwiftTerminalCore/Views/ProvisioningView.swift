@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// One-tap VPS setup wizard — select features to install, then watch progress.
-struct ProvisioningView: View {
+public struct ProvisioningView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var config = ProvisioningConfig.default
@@ -12,7 +12,7 @@ struct ProvisioningView: View {
     @State private var steps: [ProvisioningStep] = []
     @State private var logOutput: [String] = []
 
-    var body: some View {
+    public var body: some View {
         Group {
             if isProvisioning {
                 progressView
