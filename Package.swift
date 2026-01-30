@@ -4,8 +4,14 @@ import PackageDescription
 let package = Package(
     name: "SwiftTerminal",
     platforms: [
-        .macOS(.v15),
-        .iOS(.v18)
+        .iOS(.v18),
+        .macOS(.v15)
+    ],
+    products: [
+        .library(
+            name: "SwiftTerminalCore",
+            targets: ["SwiftTerminal"]
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-nio-ssh.git", from: "0.9.0"),
@@ -13,7 +19,7 @@ let package = Package(
         .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", from: "1.2.0"),
     ],
     targets: [
-        .executableTarget(
+        .target(
             name: "SwiftTerminal",
             dependencies: [
                 .product(name: "NIOSSH", package: "swift-nio-ssh"),
