@@ -5,12 +5,14 @@ import Foundation
 @MainActor
 @Observable
 public final class SSHService {
-    private(set) var isConnected = false
-    private(set) var currentServer: Server?
+    public private(set) var isConnected = false
+    public private(set) var currentServer: Server?
     nonisolated(unsafe) private var client: SSHClient?
 
+    public init() {}
+
     /// Connect to a server using password authentication.
-    func connect(to server: Server, password: String) async throws {
+    public func connect(to server: Server, password: String) async throws {
         let settings = SSHClientSettings(
             host: server.host,
             port: server.port,
@@ -27,14 +29,14 @@ public final class SSHService {
     }
 
     /// Connect to a server using a private key (Ed25519).
-    func connect(to server: Server, privateKeyPEM: String) async throws {
+    public func connect(to server: Server, privateKeyPEM: String) async throws {
         // For MVP, we use password auth as fallback
         // Real Ed25519/RSA key auth requires parsing PEM → Crypto key types
         throw SSHServiceError.authenticationFailed
     }
 
     /// Execute a single command and return stdout as String.
-    func execute(_ command: String) async throws -> String {
+    public func execute(_ command: String) async throws -> String {
         guard let client else {
             throw SSHServiceError.notConnected
         }
@@ -43,7 +45,7 @@ public final class SSHService {
     }
 
     /// Execute a command, streaming output line-by-line.
-    func executeStreaming(
+    public func executeStreaming(
         _ command: String,
         onOutput: @escaping @Sendable (String) -> Void
     ) async throws {
@@ -58,7 +60,7 @@ public final class SSHService {
     }
 
     /// Disconnect the current session.
-    func disconnect() async {
+    public func disconnect() async {
         try? await client?.close()
         client = nil
         currentServer = nil
@@ -69,12 +71,12 @@ public final class SSHService {
 // MARK: - Errors
 
 public enum SSHServiceError: LocalizedError {
-    public case notConnected
-    public case authenticationFailed
-    public case connectionTimeout
-    public case commandFailed(String)
+    case notConnected
+    case authenticationFailed
+    case connectionTimeout
+    case commandFailed(String)
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .notConnected:
             "Not connected to any server"

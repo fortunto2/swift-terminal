@@ -6,17 +6,17 @@ import Foundation
 public final class ProvisioningService {
     private let ssh: SSHService
 
-    private(set) var steps: [ProvisioningStep] = []
-    private(set) var isProvisioning = false
-    private(set) var currentFeature: ProvisioningFeature?
-    private(set) var log: [String] = []
+    public private(set) var steps: [ProvisioningStep] = []
+    public private(set) var isProvisioning = false
+    public private(set) var currentFeature: ProvisioningFeature?
+    public private(set) var log: [String] = []
 
-    init(ssh: SSHService) {
+    public init(ssh: SSHService) {
         self.ssh = ssh
     }
 
     /// Provision a server with the given configuration.
-    func provision(config: ProvisioningConfig) async {
+    public func provision(config: ProvisioningConfig) async {
         guard ssh.isConnected else {
             appendLog("❌ Not connected to any server")
             return
@@ -58,7 +58,7 @@ public final class ProvisioningService {
     }
 
     /// Cancel the current provisioning (best-effort).
-    func cancel() {
+    public func cancel() {
         isProvisioning = false
         currentFeature = nil
         appendLog("⚠️ Provisioning canceled by user")

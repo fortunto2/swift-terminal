@@ -153,13 +153,13 @@ public struct KeychainService: Sendable {
 // MARK: - Errors
 
 public enum KeychainError: LocalizedError {
-    public case saveFailed(OSStatus)
-    public case loadFailed(OSStatus)
-    public case deleteFailed(OSStatus)
-    public case encodingFailed
-    public case biometricCanceled
+    case saveFailed(OSStatus)
+    case loadFailed(OSStatus)
+    case deleteFailed(OSStatus)
+    case encodingFailed
+    case biometricCanceled
 
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .saveFailed(let status):
             "Failed to save to Keychain (status: \(status))"

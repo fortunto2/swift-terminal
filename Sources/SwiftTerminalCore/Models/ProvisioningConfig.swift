@@ -2,15 +2,15 @@ import Foundation
 
 /// Cloud provider for VPS provisioning.
 public enum CloudProvider: String, Codable, Sendable, CaseIterable, Identifiable {
-    public case hetzner
-    public case digitalOcean
-    public case linode
-    public case vultr
-    public case custom
+    case hetzner
+    case digitalOcean
+    case linode
+    case vultr
+    case custom
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .hetzner: "Hetzner"
         case .digitalOcean: "DigitalOcean"
@@ -20,7 +20,7 @@ public enum CloudProvider: String, Codable, Sendable, CaseIterable, Identifiable
         }
     }
 
-    var iconName: String {
+    public var iconName: String {
         switch self {
         case .hetzner: "h.square.fill"
         case .digitalOcean: "drop.fill"
@@ -33,16 +33,16 @@ public enum CloudProvider: String, Codable, Sendable, CaseIterable, Identifiable
 
 /// Feature that can be installed during provisioning.
 public enum ProvisioningFeature: String, Codable, Sendable, CaseIterable, Identifiable {
-    public case securityHardening
-    public case claudeCode
-    public case devTools
-    public case docker
-    public case uv
-    public case bun
+    case securityHardening
+    case claudeCode
+    case devTools
+    case docker
+    case uv
+    case bun
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .securityHardening: "Security Hardening"
         case .claudeCode: "Claude Code"
@@ -53,7 +53,7 @@ public enum ProvisioningFeature: String, Codable, Sendable, CaseIterable, Identi
         }
     }
 
-    var description: String {
+    public var description: String {
         switch self {
         case .securityHardening: "Create deploy user, harden SSH, install fail2ban, configure UFW"
         case .claudeCode: "Install Claude Code CLI with ripgrep & tmux"
@@ -64,7 +64,7 @@ public enum ProvisioningFeature: String, Codable, Sendable, CaseIterable, Identi
         }
     }
 
-    var systemImage: String {
+    public var systemImage: String {
         switch self {
         case .securityHardening: "shield.checkered"
         case .claudeCode: "brain"
@@ -78,19 +78,19 @@ public enum ProvisioningFeature: String, Codable, Sendable, CaseIterable, Identi
 
 /// Status of a provisioning step.
 public enum ProvisioningStepStatus: Sendable, Equatable {
-    public case pending
-    public case running
-    public case completed
-    public case failed(String)
+    case pending
+    case running
+    case completed
+    case failed(String)
 }
 
 /// A single step in the provisioning process.
 public struct ProvisioningStep: Identifiable, Sendable {
-    let id: UUID
-    let feature: ProvisioningFeature
-    var status: ProvisioningStepStatus
+    public let id: UUID
+    public let feature: ProvisioningFeature
+    public var status: ProvisioningStepStatus
 
-    init(feature: ProvisioningFeature, status: ProvisioningStepStatus = .pending) {
+    public init(feature: ProvisioningFeature, status: ProvisioningStepStatus = .pending) {
         self.id = UUID()
         self.feature = feature
         self.status = status
@@ -99,15 +99,15 @@ public struct ProvisioningStep: Identifiable, Sendable {
 
 /// Configuration for provisioning a new VPS.
 public struct ProvisioningConfig: Codable, Sendable {
-    var provider: CloudProvider
-    var region: String
-    var size: String
-    var hostname: String
-    var features: [ProvisioningFeature]
-    var deployUsername: String
-    var sshPort: Int
+    public var provider: CloudProvider
+    public var region: String
+    public var size: String
+    public var hostname: String
+    public var features: [ProvisioningFeature]
+    public var deployUsername: String
+    public var sshPort: Int
 
-    init(
+    public init(
         provider: CloudProvider = .hetzner,
         region: String = "fsn1",
         size: String = "cx22",

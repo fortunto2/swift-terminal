@@ -8,8 +8,8 @@ public final class ServerStore {
     private static let serversKey = "com.swiftterminal.servers"
     private static let keysKey = "com.swiftterminal.sshkeys"
 
-    private(set) var servers: [Server] = []
-    private(set) var sshKeys: [SSHKey] = []
+    public private(set) var servers: [Server] = []
+    public private(set) var sshKeys: [SSHKey] = []
 
     public init() {
         loadServers()
@@ -18,29 +18,29 @@ public final class ServerStore {
 
     // MARK: - Server CRUD
 
-    func addServer(_ server: Server) {
+    public func addServer(_ server: Server) {
         servers.append(server)
         saveServers()
     }
 
-    func updateServer(_ server: Server) {
+    public func updateServer(_ server: Server) {
         if let index = servers.firstIndex(where: { $0.id == server.id }) {
             servers[index] = server
             saveServers()
         }
     }
 
-    func deleteServer(at offsets: IndexSet) {
+    public func deleteServer(at offsets: IndexSet) {
         servers.remove(atOffsets: offsets)
         saveServers()
     }
 
-    func deleteServer(_ server: Server) {
+    public func deleteServer(_ server: Server) {
         servers.removeAll { $0.id == server.id }
         saveServers()
     }
 
-    func markConnected(_ server: Server) {
+    public func markConnected(_ server: Server) {
         if let index = servers.firstIndex(where: { $0.id == server.id }) {
             servers[index].lastConnected = .now
             saveServers()
@@ -49,19 +49,19 @@ public final class ServerStore {
 
     // MARK: - SSH Key CRUD
 
-    func addKey(_ key: SSHKey) {
+    public func addKey(_ key: SSHKey) {
         sshKeys.append(key)
         saveKeys()
     }
 
-    func deleteKey(_ key: SSHKey) {
+    public func deleteKey(_ key: SSHKey) {
         sshKeys.removeAll { $0.id == key.id }
         // Also remove from Keychain
         try? KeychainService.delete(key: key.keychainTag)
         saveKeys()
     }
 
-    func deleteKeys(at offsets: IndexSet) {
+    public func deleteKeys(at offsets: IndexSet) {
         let keysToDelete = offsets.map { sshKeys[$0] }
         for key in keysToDelete {
             try? KeychainService.delete(key: key.keychainTag)
@@ -70,7 +70,7 @@ public final class ServerStore {
         saveKeys()
     }
 
-    func key(for id: UUID?) -> SSHKey? {
+    public func key(for id: UUID?) -> SSHKey? {
         guard let id else { return nil }
         return sshKeys.first { $0.id == id }
     }

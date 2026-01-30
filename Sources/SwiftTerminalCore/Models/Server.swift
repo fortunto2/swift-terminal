@@ -2,13 +2,13 @@ import Foundation
 
 /// Authentication method for SSH connections.
 public enum AuthMethod: String, Codable, Sendable, CaseIterable, Identifiable {
-    public case password
-    public case key
-    public case agent
+    case password
+    case key
+    case agent
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .password: "Password"
         case .key: "SSH Key"
@@ -16,7 +16,7 @@ public enum AuthMethod: String, Codable, Sendable, CaseIterable, Identifiable {
         }
     }
 
-    var systemImage: String {
+    public var systemImage: String {
         switch self {
         case .password: "lock.fill"
         case .key: "key.fill"
@@ -27,18 +27,18 @@ public enum AuthMethod: String, Codable, Sendable, CaseIterable, Identifiable {
 
 /// A saved SSH server configuration.
 public struct Server: Codable, Identifiable, Sendable, Hashable {
-    var id: UUID
-    var name: String
-    var host: String
-    var port: Int
-    var username: String
-    var authMethod: AuthMethod
-    var keyID: UUID?
-    var tags: [String]
-    var createdAt: Date
-    var lastConnected: Date?
+    public var id: UUID
+    public var name: String
+    public var host: String
+    public var port: Int
+    public var username: String
+    public var authMethod: AuthMethod
+    public var keyID: UUID?
+    public var tags: [String]
+    public var createdAt: Date
+    public var lastConnected: Date?
 
-    init(
+    public init(
         id: UUID = UUID(),
         name: String,
         host: String,
@@ -65,7 +65,7 @@ public struct Server: Codable, Identifiable, Sendable, Hashable {
 
 extension Server {
     /// Display string for the connection (user@host:port).
-    var connectionString: String {
+    public var connectionString: String {
         if port == 22 {
             "\(username)@\(host)"
         } else {

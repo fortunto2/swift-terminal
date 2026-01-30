@@ -2,13 +2,13 @@ import Foundation
 
 /// Type of SSH key.
 public enum SSHKeyType: String, Codable, Sendable, CaseIterable, Identifiable {
-    public case ed25519
-    public case rsa4096
-    public case ecdsaP256
+    case ed25519
+    case rsa4096
+    case ecdsaP256
 
-    var id: String { rawValue }
+    public var id: String { rawValue }
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .ed25519: "Ed25519"
         case .rsa4096: "RSA 4096"
@@ -16,7 +16,7 @@ public enum SSHKeyType: String, Codable, Sendable, CaseIterable, Identifiable {
         }
     }
 
-    var algorithmName: String {
+    public var algorithmName: String {
         switch self {
         case .ed25519: "ssh-ed25519"
         case .rsa4096: "ssh-rsa"
@@ -27,16 +27,16 @@ public enum SSHKeyType: String, Codable, Sendable, CaseIterable, Identifiable {
 
 /// An SSH key pair. Private key is stored in Keychain; only metadata is persisted here.
 public struct SSHKey: Codable, Identifiable, Sendable, Hashable {
-    var id: UUID
-    var name: String
-    var keyType: SSHKeyType
-    var publicKey: String
-    var fingerprint: String
-    var createdAt: Date
+    public var id: UUID
+    public var name: String
+    public var keyType: SSHKeyType
+    public var publicKey: String
+    public var fingerprint: String
+    public var createdAt: Date
     /// Keychain item identifier for the private key.
-    var keychainTag: String
+    public var keychainTag: String
 
-    init(
+    public init(
         id: UUID = UUID(),
         name: String,
         keyType: SSHKeyType = .ed25519,
