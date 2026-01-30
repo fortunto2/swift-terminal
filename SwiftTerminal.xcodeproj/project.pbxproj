@@ -8,11 +8,15 @@
 
 /* Begin PBXBuildFile section */
 		03698701B6B4D316453DC1FD /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = 7E14470B990FF36B5573E0A1 /* SwiftTerm */; };
+		03A2BC342E1E812B84FAA118 /* ActiveTerminalContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E4DD0CC2B003E4C08827C1C2 /* ActiveTerminalContainerView.swift */; };
 		04D88F8B5D11D5A5FC9BA1DB /* ServerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = D095A5C19D0C48831013DEED /* ServerStore.swift */; };
 		06DA88DF8DCC683E2FD12BD1 /* SwiftTerminalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15159432F92F737417104FD4 /* SwiftTerminalApp.swift */; };
 		0972C788467B83C224F7A883 /* ProvisioningService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6B99A0F55491B008061BC817 /* ProvisioningService.swift */; };
+		1E8EF6E4522107880C0D1DF9 /* PortForward.swift in Sources */ = {isa = PBXBuildFile; fileRef = C655391F5C755A9F11E43F43 /* PortForward.swift */; };
+		2A02F502F8429822B23EAE37 /* SessionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B21EA5DC33C91A69774E4161 /* SessionManager.swift */; };
 		398C873BE25164BA3733ECEF /* SSHKeyGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA896D90FB0B6B928410966 /* SSHKeyGenerator.swift */; };
 		4064DD48D5B554BAAE59094F /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 857ABBF48D7BF0252D9A2D57 /* TerminalView.swift */; };
+		42E4DB63FF6DB54178ABB459 /* PortForwardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A5B6B207EAC4C117B1681D /* PortForwardView.swift */; };
 		510105A1A1148C4FD4015044 /* ProvisioningScripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48208F5949ECD4AE5DDA2DBD /* ProvisioningScripts.swift */; };
 		54FFEB8C7FA039E64786F770 /* ServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2314834A6820AA1F6B23B14E /* ServerListView.swift */; };
 		55B12DF9281017B01DD3F75A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DA6002CB3A49B7C38B0A9CB8 /* Assets.xcassets */; };
@@ -21,12 +25,14 @@
 		61A6D3CBC8AEE71A6383296C /* ProvisioningConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565A0CDFFAEFD2BCED8D424C /* ProvisioningConfig.swift */; };
 		6D37137A1F4083BC4E103BC6 /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97CB4D805E9DB304962D9E2 /* Server.swift */; };
 		8908F180DB4C71237956F3A2 /* ProvisioningView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851747E6374CBF721AED147B /* ProvisioningView.swift */; };
+		94AC27C33887EA435CBC6A8C /* Session.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6457B386E6F6F017C4F22C3F /* Session.swift */; };
 		9BDF3D48B300DF61EF15F1A6 /* Exports.swift in Sources */ = {isa = PBXBuildFile; fileRef = 425B5660C970DD49C3167D1D /* Exports.swift */; };
 		9D13354564CBDDCFF83C3AD3 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = B1377B4E8CA2718AB9DD38DD /* Citadel */; };
 		AF68889FB937CA0BBCA416FE /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799CCA5FDBA3A8B7AF64F444 /* KeychainService.swift */; };
 		B1D7B1D9EFDEB7C0C38FE7B6 /* SSHService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7516F009307BDDB0AC84493F /* SSHService.swift */; };
 		BC15E9DEDC0095A06D6E7B7B /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9006B98FE3D1E441DFDEAB4 /* SettingsView.swift */; };
 		C9D736B4339FFC328A989DC8 /* ClaudeKeyboardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2B9F32A4A1FECD70FBF9025 /* ClaudeKeyboardView.swift */; };
+		CD0138E3ED6488836381F38A /* SessionTabStrip.swift in Sources */ = {isa = PBXBuildFile; fileRef = 57DAF178B52F3BB5582E45D9 /* SessionTabStrip.swift */; };
 		D5F4066A7F3D20ED12250CF1 /* KeyManagementView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0FFE5DE2F35F47C3DD800B63 /* KeyManagementView.swift */; };
 		D6C84DBDDE7A2E9E4D7DBA13 /* ClaudeCodeAccessoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 996C510192696EC1EA70714C /* ClaudeCodeAccessoryView.swift */; };
 		D80BC4E363FCCD85D7B6A59A /* SwiftTerminalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7540D3E1E822C98C7B95B8 /* SwiftTerminalTests.swift */; };
@@ -53,6 +59,8 @@
 		44F5661FDAAD25E40E6465A8 /* SSHKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKey.swift; sourceTree = "<group>"; };
 		48208F5949ECD4AE5DDA2DBD /* ProvisioningScripts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningScripts.swift; sourceTree = "<group>"; };
 		565A0CDFFAEFD2BCED8D424C /* ProvisioningConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningConfig.swift; sourceTree = "<group>"; };
+		57DAF178B52F3BB5582E45D9 /* SessionTabStrip.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionTabStrip.swift; sourceTree = "<group>"; };
+		6457B386E6F6F017C4F22C3F /* Session.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Session.swift; sourceTree = "<group>"; };
 		6B99A0F55491B008061BC817 /* ProvisioningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningService.swift; sourceTree = "<group>"; };
 		7449BE6F63CCC4A69330730F /* SwiftTerminal.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = SwiftTerminal.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		7516F009307BDDB0AC84493F /* SSHService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHService.swift; sourceTree = "<group>"; };
@@ -62,11 +70,15 @@
 		939E70021316FB5DC69EEE09 /* AddServerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddServerView.swift; sourceTree = "<group>"; };
 		996C510192696EC1EA70714C /* ClaudeCodeAccessoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeCodeAccessoryView.swift; sourceTree = "<group>"; };
 		A9006B98FE3D1E441DFDEAB4 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B21EA5DC33C91A69774E4161 /* SessionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SessionManager.swift; sourceTree = "<group>"; };
 		BFA896D90FB0B6B928410966 /* SSHKeyGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyGenerator.swift; sourceTree = "<group>"; };
+		C655391F5C755A9F11E43F43 /* PortForward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForward.swift; sourceTree = "<group>"; };
 		D095A5C19D0C48831013DEED /* ServerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStore.swift; sourceTree = "<group>"; };
 		DA6002CB3A49B7C38B0A9CB8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		E4DD0CC2B003E4C08827C1C2 /* ActiveTerminalContainerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ActiveTerminalContainerView.swift; sourceTree = "<group>"; };
 		E7C4870FF64F3BA1EE8E90A1 /* SwiftTerminalTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SwiftTerminalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F2B9F32A4A1FECD70FBF9025 /* ClaudeKeyboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClaudeKeyboardView.swift; sourceTree = "<group>"; };
+		F4A5B6B207EAC4C117B1681D /* PortForwardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForwardView.swift; sourceTree = "<group>"; };
 		F97CB4D805E9DB304962D9E2 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -86,13 +98,16 @@
 		07526FD266B1548C6D2059A1 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				E4DD0CC2B003E4C08827C1C2 /* ActiveTerminalContainerView.swift */,
 				939E70021316FB5DC69EEE09 /* AddServerView.swift */,
 				996C510192696EC1EA70714C /* ClaudeCodeAccessoryView.swift */,
 				F2B9F32A4A1FECD70FBF9025 /* ClaudeKeyboardView.swift */,
 				0FFE5DE2F35F47C3DD800B63 /* KeyManagementView.swift */,
 				2762A6ED993ADF3FE1A099B8 /* LockScreenView.swift */,
+				F4A5B6B207EAC4C117B1681D /* PortForwardView.swift */,
 				851747E6374CBF721AED147B /* ProvisioningView.swift */,
 				2314834A6820AA1F6B23B14E /* ServerListView.swift */,
+				57DAF178B52F3BB5582E45D9 /* SessionTabStrip.swift */,
 				A9006B98FE3D1E441DFDEAB4 /* SettingsView.swift */,
 				857ABBF48D7BF0252D9A2D57 /* TerminalView.swift */,
 			);
@@ -119,8 +134,10 @@
 		4A119D2CC945BB6CFE517A64 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				C655391F5C755A9F11E43F43 /* PortForward.swift */,
 				565A0CDFFAEFD2BCED8D424C /* ProvisioningConfig.swift */,
 				F97CB4D805E9DB304962D9E2 /* Server.swift */,
+				6457B386E6F6F017C4F22C3F /* Session.swift */,
 				44F5661FDAAD25E40E6465A8 /* SSHKey.swift */,
 			);
 			path = Models;
@@ -148,6 +165,7 @@
 				799CCA5FDBA3A8B7AF64F444 /* KeychainService.swift */,
 				6B99A0F55491B008061BC817 /* ProvisioningService.swift */,
 				D095A5C19D0C48831013DEED /* ServerStore.swift */,
+				B21EA5DC33C91A69774E4161 /* SessionManager.swift */,
 				BFA896D90FB0B6B928410966 /* SSHKeyGenerator.swift */,
 				7516F009307BDDB0AC84493F /* SSHService.swift */,
 			);
@@ -298,6 +316,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				03A2BC342E1E812B84FAA118 /* ActiveTerminalContainerView.swift in Sources */,
 				EC4F3199209C97B03BBCC40D /* AddServerView.swift in Sources */,
 				D6C84DBDDE7A2E9E4D7DBA13 /* ClaudeCodeAccessoryView.swift in Sources */,
 				C9D736B4339FFC328A989DC8 /* ClaudeKeyboardView.swift in Sources */,
@@ -305,6 +324,8 @@
 				D5F4066A7F3D20ED12250CF1 /* KeyManagementView.swift in Sources */,
 				AF68889FB937CA0BBCA416FE /* KeychainService.swift in Sources */,
 				5FCB4E75A3A4DA489F915491 /* LockScreenView.swift in Sources */,
+				1E8EF6E4522107880C0D1DF9 /* PortForward.swift in Sources */,
+				42E4DB63FF6DB54178ABB459 /* PortForwardView.swift in Sources */,
 				61A6D3CBC8AEE71A6383296C /* ProvisioningConfig.swift in Sources */,
 				510105A1A1148C4FD4015044 /* ProvisioningScripts.swift in Sources */,
 				0972C788467B83C224F7A883 /* ProvisioningService.swift in Sources */,
@@ -315,6 +336,9 @@
 				6D37137A1F4083BC4E103BC6 /* Server.swift in Sources */,
 				54FFEB8C7FA039E64786F770 /* ServerListView.swift in Sources */,
 				04D88F8B5D11D5A5FC9BA1DB /* ServerStore.swift in Sources */,
+				94AC27C33887EA435CBC6A8C /* Session.swift in Sources */,
+				2A02F502F8429822B23EAE37 /* SessionManager.swift in Sources */,
+				CD0138E3ED6488836381F38A /* SessionTabStrip.swift in Sources */,
 				BC15E9DEDC0095A06D6E7B7B /* SettingsView.swift in Sources */,
 				06DA88DF8DCC683E2FD12BD1 /* SwiftTerminalApp.swift in Sources */,
 				4064DD48D5B554BAAE59094F /* TerminalView.swift in Sources */,

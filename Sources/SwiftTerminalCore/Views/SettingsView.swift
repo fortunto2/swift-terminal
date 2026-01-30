@@ -10,10 +10,11 @@ public struct SettingsView: View {
     @AppStorage("requireBiometrics") private var requireBiometrics = true
     @AppStorage("requireLockScreen") private var requireLockScreen = true
     @AppStorage("autoReconnect") private var autoReconnect = true
+    @AppStorage("autoTmux") private var autoTmux = true
 
     public var body: some View {
         Form {
-            Section("Connection Defaults") {
+            Section {
                 HStack {
                     Text("Default Port")
                     Spacer()
@@ -30,6 +31,11 @@ public struct SettingsView: View {
                     .textInputAutocapitalization(.never)
                     #endif
                 Toggle("Auto-Reconnect", isOn: $autoReconnect)
+                Toggle("Auto-tmux Sessions", isOn: $autoTmux)
+            } header: {
+                Text("Connection Defaults")
+            } footer: {
+                Text("Auto-tmux wraps each shell in a tmux session for persistence when the app goes to background.")
             }
 
             Section("Terminal") {
@@ -90,6 +96,7 @@ public struct SettingsView: View {
         requireBiometrics = true
         requireLockScreen = true
         autoReconnect = true
+        autoTmux = true
     }
 }
 

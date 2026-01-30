@@ -37,6 +37,7 @@ public struct Server: Codable, Identifiable, Sendable, Hashable {
     public var tags: [String]
     public var createdAt: Date
     public var lastConnected: Date?
+    public var portForwards: [PortForwardConfig]
 
     public init(
         id: UUID = UUID(),
@@ -48,7 +49,8 @@ public struct Server: Codable, Identifiable, Sendable, Hashable {
         keyID: UUID? = nil,
         tags: [String] = [],
         createdAt: Date = .now,
-        lastConnected: Date? = nil
+        lastConnected: Date? = nil,
+        portForwards: [PortForwardConfig] = []
     ) {
         self.id = id
         self.name = name
@@ -60,6 +62,7 @@ public struct Server: Codable, Identifiable, Sendable, Hashable {
         self.tags = tags
         self.createdAt = createdAt
         self.lastConnected = lastConnected
+        self.portForwards = portForwards
     }
 }
 

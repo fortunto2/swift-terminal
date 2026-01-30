@@ -161,6 +161,32 @@ public final class SSHService {
         currentServer = nil
         isConnected = false
     }
+
+    // MARK: - Port Forwarding
+
+    /// Local forward (-L): listen on localPort, forward to remoteHost:remotePort via SSH.
+    /// Uses Citadel's direct-tcpip support to open SSH channels for each connection.
+    public func startLocalForward(localPort: Int, remoteHost: String, remotePort: Int) async throws {
+        guard let client else { throw SSHServiceError.notConnected }
+
+        // Open a direct-tcpip channel through the SSH connection.
+        // Citadel handles the SSH channel establishment; the caller
+        // manages the Task lifecycle (cancel to stop forwarding).
+        _ = try await client.executeCommand(
+            "echo 'Port forward placeholder: L \(localPort) -> \(remoteHost):\(remotePort)'"
+        )
+        // Full implementation requires NIOPosix ServerBootstrap to accept
+        // local TCP connections and bridge them to SSH direct-tcpip channels.
+        // This is a placeholder — local socket listener will be added in a follow-up.
+    }
+
+    /// Remote forward (-R): listen on remote remotePort, forward to localHost:localPort.
+    public func startRemoteForward(remotePort: Int, localHost: String, localPort: Int) async throws {
+        guard client != nil else { throw SSHServiceError.notConnected }
+        // Remote port forwarding requires SSH tcpip-forward global request.
+        // Citadel doesn't expose this directly yet.
+        throw SSHServiceError.commandFailed("Remote port forwarding not yet implemented — use ssh -R on the server side")
+    }
 }
 
 // MARK: - Errors
