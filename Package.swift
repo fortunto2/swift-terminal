@@ -12,17 +12,25 @@ let package = Package(
         .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", from: "1.2.0"),
     ],
     targets: [
+        // Core library — all models, services, views
         .target(
-            name: "SwiftTerminal",
+            name: "SwiftTerminalCore",
             dependencies: [
                 .product(name: "Citadel", package: "Citadel"),
                 .product(name: "SwiftTerm", package: "SwiftTerm"),
             ],
+            path: "Sources/SwiftTerminalCore"
+        ),
+        // App entry point
+        .executableTarget(
+            name: "SwiftTerminal",
+            dependencies: ["SwiftTerminalCore"],
             path: "Sources/SwiftTerminal"
         ),
+        // Tests depend on core library only
         .testTarget(
             name: "SwiftTerminalTests",
-            dependencies: ["SwiftTerminal"],
+            dependencies: ["SwiftTerminalCore"],
             path: "Tests/SwiftTerminalTests"
         ),
     ]

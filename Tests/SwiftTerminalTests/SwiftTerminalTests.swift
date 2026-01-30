@@ -1,6 +1,6 @@
 import Foundation
 import Testing
-@testable import SwiftTerminal
+@testable import SwiftTerminalCore
 
 @Suite("Server Model")
 struct ServerTests {
