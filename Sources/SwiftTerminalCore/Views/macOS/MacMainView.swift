@@ -1,11 +1,14 @@
 import SwiftUI
+import SwiftData
 
-/// macOS root view: NavigationSplitView with sidebar for Servers, SSH Keys, Settings.
+/// macOS root view: NavigationSplitView with sidebar for Sessions, Servers, SSH Keys.
 struct MacMainView: View {
     @Environment(ServerStore.self) private var store
     @Environment(SessionManager.self) private var sessionManager
+    @Environment(\.modelContext) private var modelContext
 
     enum SidebarItem: Hashable {
+        case sessions
         case servers
         case keys
     }
@@ -16,6 +19,25 @@ struct MacMainView: View {
         NavigationSplitView {
             List(selection: $selection) {
                 Section {
+                    Label {
+                        HStack {
+                            Text("Sessions")
+                            Spacer()
+                            if sessionManager.sessions.count > 0 {
+                                Text("\(sessionManager.sessions.count)")
+                                    .font(.caption2.weight(.semibold))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 1)
+                                    .background(.green.opacity(0.2))
+                                    .foregroundStyle(.green)
+                                    .clipShape(Capsule())
+                            }
+                        }
+                    } icon: {
+                        Image(systemName: "terminal")
+                    }
+                    .tag(SidebarItem.sessions)
+
                     Label("Servers", systemImage: "server.rack")
                         .tag(SidebarItem.servers)
                     Label("SSH Keys", systemImage: "key.fill")
@@ -26,9 +48,11 @@ struct MacMainView: View {
             .navigationSplitViewColumnWidth(min: 180, ideal: 200)
         } detail: {
             switch selection {
+            case .sessions:
+                MacSessionsView()
             case .servers:
                 NavigationStack {
-                    MacServerListView()
+                    MacServerListView(sidebarSelection: $selection)
                 }
             case .keys:
                 NavigationStack {
@@ -38,9 +62,19 @@ struct MacMainView: View {
                 ContentUnavailableView {
                     Label("Select a Section", systemImage: "sidebar.left")
                 } description: {
-                    Text("Choose Servers or SSH Keys from the sidebar.")
+                    Text("Choose Sessions, Servers, or SSH Keys from the sidebar.")
                 }
             }
+        }
+        .onAppear {
+            sessionManager.setModelContext(modelContext)
+            sessionManager.restoreSessionsIfNeeded(from: store)
+            if !sessionManager.sessions.isEmpty {
+                selection = .sessions
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .switchToServers)) { _ in
+            selection = .servers
         }
     }
 }

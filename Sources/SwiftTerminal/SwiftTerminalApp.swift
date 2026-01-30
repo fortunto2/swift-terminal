@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct SwiftTerminalApp: App {
@@ -32,6 +33,7 @@ struct SwiftTerminalApp: App {
         #endif
         .environment(serverStore)
         .environment(sessionManager)
+        .modelContainer(for: PersistedSession.self)
 
         #if os(macOS)
         Settings {

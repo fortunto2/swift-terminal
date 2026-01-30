@@ -5,10 +5,10 @@ import AppKit
 struct MacServerListView: View {
     @Environment(ServerStore.self) private var store
     @Environment(SessionManager.self) private var sessionManager
+    @Binding var sidebarSelection: MacMainView.SidebarItem?
     @State private var showingAddServer = false
     @State private var editingServer: Server?
     @State private var provisioningServer: Server?
-    @State private var showTerminal = false
     @State private var searchText = ""
     @State private var onboardingSkipped = false
 
@@ -55,15 +55,8 @@ struct MacServerListView: View {
             }
             .frame(minWidth: 520, minHeight: 500)
         }
-        .sheet(isPresented: $showTerminal) {
-            MacTerminalContainerView()
-                .frame(minWidth: 700, minHeight: 500)
-        }
         .onAppear {
             sessionManager.restoreSessionsIfNeeded(from: store)
-            if !sessionManager.sessions.isEmpty {
-                showTerminal = true
-            }
         }
     }
 
@@ -98,55 +91,17 @@ struct MacServerListView: View {
     @ViewBuilder
     private var serverList: some View {
         List {
-            if !sessionManager.sessions.isEmpty {
-                Section("Active Sessions") {
-                    ForEach(sessionManager.sessions) { session in
-                        Button {
-                            sessionManager.switchTo(session.id)
-                            showTerminal = true
-                        } label: {
-                            HStack {
-                                Circle()
-                                    .fill(session.state.color)
-                                    .frame(width: 8, height: 8)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(session.server.name)
-                                        .font(.headline)
-                                    Text(session.state.label)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                            }
-                        }
-                        .tint(.primary)
-                        .contextMenu {
-                            Button {
-                                sessionManager.closeSession(session.id)
-                            } label: {
-                                Label("Close Session", systemImage: "xmark.circle")
-                            }
-                        }
-                    }
-                }
-            }
-
             Section(sessionManager.sessions.isEmpty ? "" : "Servers") {
                 ForEach(filteredServers) { server in
                     MacServerRow(
                         server: server,
                         hasActiveSessions: sessionManager.hasSessions(for: server)
                     ) {
-                        sessionManager.createSession(for: server)
-                        showTerminal = true
+                        connectToServer(server)
                     }
                     .contextMenu {
                         Button {
-                            sessionManager.createSession(for: server)
-                            showTerminal = true
+                            connectToServer(server)
                         } label: {
                             Label("Connect", systemImage: "terminal")
                         }
@@ -170,6 +125,13 @@ struct MacServerListView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Actions
+
+    private func connectToServer(_ server: Server) {
+        sessionManager.createSession(for: server)
+        sidebarSelection = .sessions
     }
 }
 

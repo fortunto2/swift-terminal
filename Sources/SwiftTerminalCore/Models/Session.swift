@@ -140,6 +140,10 @@ public final class Session: Identifiable {
     /// Called from TerminalViewRepresentable.makeUIView on first creation,
     /// and from reconnect after SSH re-established.
     public func startShellIfNeeded() {
+        guard !shellStarted else {
+            stLog("\(tmuxName) startShellIfNeeded: ALREADY STARTED, skipping")
+            return
+        }
         guard let tv = terminalView else {
             stLog("\(tmuxName) startShellIfNeeded: no terminalView!")
             return
@@ -151,7 +155,10 @@ public final class Session: Identifiable {
 
         let cols = tv.getTerminal().cols
         let rows = tv.getTerminal().rows
-        stLog("\(tmuxName) startShell cols=\(cols) rows=\(rows) shellStarted=\(shellStarted)")
+        stLog("\(tmuxName) startShell cols=\(cols) rows=\(rows)")
+
+        // Mark as started FIRST to prevent double-start races
+        shellStarted = true
 
         // Wire output → terminal feed
         sshService.onOutput = { [weak tv] data in
@@ -169,7 +176,6 @@ public final class Session: Identifiable {
         }
 
         sshService.startShell(cols: cols, rows: rows)
-        shellStarted = true
 
         // tmux attach after shell has time to initialize
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
@@ -244,13 +250,21 @@ public final class Session: Identifiable {
         """
     }
 
+    private var tmuxAttached = false
+
     public func sendTmuxAttach() {
         guard isTmuxEnabled else {
             stLog("\(tmuxName) tmux disabled, skip attach")
             return
         }
-        stLog("\(tmuxName) sendTmuxAttach")
-        let cmd = tmuxEnsureAndRun("tmux new-session -A -s \(tmuxName)")
+        guard !tmuxAttached else {
+            stLog("\(tmuxName) sendTmuxAttach: ALREADY ATTACHED, skipping")
+            return
+        }
+        tmuxAttached = true
+        let tmuxCmd = "tmux new-session -A -s \(tmuxName) \\; set remain-on-exit on"
+        stLog("\(tmuxName) sendTmuxAttach: \(tmuxCmd)")
+        let cmd = tmuxEnsureAndRun(tmuxCmd)
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
     }
 
@@ -260,7 +274,9 @@ public final class Session: Identifiable {
             return
         }
         stLog("\(tmuxName) sendTmuxReattach")
-        let cmd = tmuxEnsureAndRun("tmux attach -t \(tmuxName) 2>/dev/null || tmux new -s \(tmuxName)")
+        let cmd = tmuxEnsureAndRun(
+            "tmux attach -t \(tmuxName) 2>/dev/null || tmux new -s \(tmuxName) \\; set remain-on-exit on"
+        )
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
     }
 
@@ -391,6 +407,7 @@ public final class Session: Identifiable {
         for fwd in activeForwards { fwd.stop() }
         activeForwards.removeAll()
         shellStarted = false
+        tmuxAttached = false
         await sshService.disconnect()
         state = .disconnected
     }

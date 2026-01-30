@@ -28,6 +28,7 @@ public final class ShellWriter: @unchecked Sendable {
     }
 
     public func resize(cols: Int, rows: Int) {
+        guard cols > 0, rows > 0 else { return }
         let writer = lock.withLock { _writer }
         guard let writer else { return }
         Task {

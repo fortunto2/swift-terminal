@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import LocalAuthentication
 
 /// iOS root view: LockScreen gate → NavigationStack → ServerListView.
@@ -6,6 +7,8 @@ struct iOSMainView: View {
     @State private var isUnlocked = false
     @State private var authError: String?
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.modelContext) private var modelContext
+    @Environment(SessionManager.self) private var sessionManager
     @AppStorage("requireLockScreen") private var requireLockScreen = true
 
     private var shouldLock: Bool { requireLockScreen }
@@ -19,6 +22,9 @@ struct iOSMainView: View {
             } else {
                 lockedView
             }
+        }
+        .onAppear {
+            sessionManager.setModelContext(modelContext)
         }
         .onChange(of: scenePhase) { _, newPhase in
             if newPhase == .background && shouldLock {

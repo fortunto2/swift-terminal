@@ -47,6 +47,7 @@ public struct TerminalView: View {
     let session: Session
 
     @Environment(ServerStore.self) private var store
+    @Environment(SessionManager.self) private var sessionManager
     @AppStorage("autoReconnect") private var autoReconnect = true
     @State private var showPasswordPrompt = false
     @State private var passwordInput = ""
@@ -172,6 +173,10 @@ public struct TerminalView: View {
             // Don't re-connect if session is already connected (tab switch reuse)
             if !session.state.isConnected {
                 await connect()
+            }
+            // Sync orphaned tmux sessions from server (runs once per server)
+            if session.state.isConnected {
+                sessionManager.syncRemoteTmuxSessions(via: session, store: store)
             }
         }
         .onDisappear {

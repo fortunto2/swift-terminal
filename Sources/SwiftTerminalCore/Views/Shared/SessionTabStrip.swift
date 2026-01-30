@@ -30,9 +30,14 @@ public struct SessionTabStrip: View {
                     .fill(session.state.color)
                     .frame(width: 8, height: 8)
 
-                Text(session.server.name)
-                    .font(.system(size: 13, weight: isActive ? .semibold : .regular))
-                    .lineLimit(1)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(session.server.name)
+                        .font(.system(size: 12, weight: isActive ? .semibold : .regular))
+                        .lineLimit(1)
+                    Text(session.tmuxName)
+                        .font(.system(size: 9, weight: .regular, design: .monospaced))
+                        .foregroundStyle(isActive ? .green.opacity(0.7) : .gray.opacity(0.7))
+                }
 
                 Button {
                     sessionManager.closeSession(session.id)
@@ -56,8 +61,11 @@ public struct SessionTabStrip: View {
 
     private var addButton: some View {
         Button {
-            // Post notification to dismiss terminal and go back to server list
+            #if os(macOS)
+            NotificationCenter.default.post(name: .switchToServers, object: nil)
+            #else
             NotificationCenter.default.post(name: .dismissTerminalContainer, object: nil)
+            #endif
         } label: {
             Image(systemName: "plus")
                 .font(.system(size: 13, weight: .semibold))
@@ -75,4 +83,5 @@ public struct SessionTabStrip: View {
 
 extension Notification.Name {
     static let dismissTerminalContainer = Notification.Name("dismissTerminalContainer")
+    static let switchToServers = Notification.Name("switchToServers")
 }
