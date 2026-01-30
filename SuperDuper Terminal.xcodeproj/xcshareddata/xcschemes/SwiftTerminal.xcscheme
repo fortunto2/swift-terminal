@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
    LastUpgradeVersion = "1600"
-   version = "1.7">
+   version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
-      buildImplicitDependencies = "YES"
-      runPostActionsOnFailure = "NO">
+      buildImplicitDependencies = "YES">
       <BuildActionEntries>
          <BuildActionEntry
             buildForTesting = "YES"
@@ -16,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "3341A553F145459CDFAB2B52"
-               BuildableName = "SwiftTerminal.app"
-               BlueprintName = "SwiftTerminal"
-               ReferencedContainer = "container:SwiftTerminal.xcodeproj">
+               BuildableName = "SuperDuper Terminal.app"
+               BlueprintName = "SuperDuper Terminal"
+               ReferencedContainer = "container:SuperDuper Terminal.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -28,15 +27,14 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
-      codeCoverageEnabled = "YES"
-      onlyGenerateCoverageForSpecifiedTargets = "NO">
+      codeCoverageEnabled = "YES">
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3341A553F145459CDFAB2B52"
-            BuildableName = "SwiftTerminal.app"
-            BlueprintName = "SwiftTerminal"
-            ReferencedContainer = "container:SwiftTerminal.xcodeproj">
+            BuildableName = "SuperDuper Terminal.app"
+            BlueprintName = "SuperDuper Terminal"
+            ReferencedContainer = "container:SuperDuper Terminal.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
       <Testables>
@@ -46,14 +44,12 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "C29E252009246FD393DAEF09"
-               BuildableName = "SwiftTerminalTests.xctest"
-               BlueprintName = "SwiftTerminalTests"
-               ReferencedContainer = "container:SwiftTerminal.xcodeproj">
+               BuildableName = "SuperDuper TerminalTests.xctest"
+               BlueprintName = "SuperDuper TerminalTests"
+               ReferencedContainer = "container:SuperDuper Terminal.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
@@ -70,13 +66,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3341A553F145459CDFAB2B52"
-            BuildableName = "SwiftTerminal.app"
-            BlueprintName = "SwiftTerminal"
-            ReferencedContainer = "container:SwiftTerminal.xcodeproj">
+            BuildableName = "SuperDuper Terminal.app"
+            BlueprintName = "SuperDuper Terminal"
+            ReferencedContainer = "container:SuperDuper Terminal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -89,13 +83,11 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "3341A553F145459CDFAB2B52"
-            BuildableName = "SwiftTerminal.app"
-            BlueprintName = "SwiftTerminal"
-            ReferencedContainer = "container:SwiftTerminal.xcodeproj">
+            BuildableName = "SuperDuper Terminal.app"
+            BlueprintName = "SuperDuper Terminal"
+            ReferencedContainer = "container:SuperDuper Terminal.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <CommandLineArguments>
-      </CommandLineArguments>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

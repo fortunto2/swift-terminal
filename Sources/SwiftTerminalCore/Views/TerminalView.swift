@@ -327,9 +327,7 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         context.coordinator.terminalView = terminalView
 
         // Replace default accessory with Claude Code keyboard bar
-        let accessory = ClaudeCodeAccessoryView { [weak sshService] data in
-            sshService?.shellWriter.write(data)
-        }
+        let accessory = ClaudeCodeAccessoryView(terminalView: terminalView)
         terminalView.inputAccessoryView = accessory
 
         // Start SSH shell and pipe output to terminal

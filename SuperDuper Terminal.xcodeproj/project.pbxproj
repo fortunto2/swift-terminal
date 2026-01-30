@@ -53,7 +53,7 @@
 		48208F5949ECD4AE5DDA2DBD /* ProvisioningScripts.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningScripts.swift; sourceTree = "<group>"; };
 		565A0CDFFAEFD2BCED8D424C /* ProvisioningConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningConfig.swift; sourceTree = "<group>"; };
 		6B99A0F55491B008061BC817 /* ProvisioningService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningService.swift; sourceTree = "<group>"; };
-		7449BE6F63CCC4A69330730F /* SwiftTerminal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftTerminal.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7449BE6F63CCC4A69330730F /* SuperDuper Terminal.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "SuperDuper Terminal.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7516F009307BDDB0AC84493F /* SSHService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHService.swift; sourceTree = "<group>"; };
 		799CCA5FDBA3A8B7AF64F444 /* KeychainService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainService.swift; sourceTree = "<group>"; };
 		851747E6374CBF721AED147B /* ProvisioningView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProvisioningView.swift; sourceTree = "<group>"; };
@@ -64,7 +64,7 @@
 		BFA896D90FB0B6B928410966 /* SSHKeyGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SSHKeyGenerator.swift; sourceTree = "<group>"; };
 		D095A5C19D0C48831013DEED /* ServerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStore.swift; sourceTree = "<group>"; };
 		DA6002CB3A49B7C38B0A9CB8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		E7C4870FF64F3BA1EE8E90A1 /* SwiftTerminalTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = SwiftTerminalTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		E7C4870FF64F3BA1EE8E90A1 /* SuperDuper TerminalTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "SuperDuper TerminalTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		F97CB4D805E9DB304962D9E2 /* Server.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Server.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -107,8 +107,8 @@
 		159F538AD25A8C24AF2A5180 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7449BE6F63CCC4A69330730F /* SwiftTerminal.app */,
-				E7C4870FF64F3BA1EE8E90A1 /* SwiftTerminalTests.xctest */,
+				7449BE6F63CCC4A69330730F /* SuperDuper Terminal.app */,
+				E7C4870FF64F3BA1EE8E90A1 /* SuperDuper TerminalTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -193,9 +193,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		3341A553F145459CDFAB2B52 /* SwiftTerminal */ = {
+		3341A553F145459CDFAB2B52 /* SuperDuper Terminal */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F50FABDF125055BA75D2EB1D /* Build configuration list for PBXNativeTarget "SwiftTerminal" */;
+			buildConfigurationList = F50FABDF125055BA75D2EB1D /* Build configuration list for PBXNativeTarget "SuperDuper Terminal" */;
 			buildPhases = (
 				E09A0C98B5F9501554BCC11C /* Sources */,
 				32EEE3BBF7B8A51B1D86903F /* Resources */,
@@ -205,18 +205,18 @@
 			);
 			dependencies = (
 			);
-			name = SwiftTerminal;
+			name = "SuperDuper Terminal";
 			packageProductDependencies = (
 				B1377B4E8CA2718AB9DD38DD /* Citadel */,
 				7E14470B990FF36B5573E0A1 /* SwiftTerm */,
 			);
 			productName = SwiftTerminal;
-			productReference = 7449BE6F63CCC4A69330730F /* SwiftTerminal.app */;
+			productReference = 7449BE6F63CCC4A69330730F /* SuperDuper Terminal.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C29E252009246FD393DAEF09 /* SwiftTerminalTests */ = {
+		C29E252009246FD393DAEF09 /* SuperDuper TerminalTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = D68D3B691C0C70D83BE92047 /* Build configuration list for PBXNativeTarget "SwiftTerminalTests" */;
+			buildConfigurationList = D68D3B691C0C70D83BE92047 /* Build configuration list for PBXNativeTarget "SuperDuper TerminalTests" */;
 			buildPhases = (
 				3494B129CDD413A56AB796ED /* Sources */,
 			);
@@ -225,11 +225,11 @@
 			dependencies = (
 				24745A090E8CF27B62C81669 /* PBXTargetDependency */,
 			);
-			name = SwiftTerminalTests;
+			name = "SuperDuper TerminalTests";
 			packageProductDependencies = (
 			);
 			productName = SwiftTerminalTests;
-			productReference = E7C4870FF64F3BA1EE8E90A1 /* SwiftTerminalTests.xctest */;
+			productReference = E7C4870FF64F3BA1EE8E90A1 /* SuperDuper TerminalTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -247,7 +247,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C5393E0D4CA08303E83EC49B /* Build configuration list for PBXProject "SwiftTerminal" */;
+			buildConfigurationList = C5393E0D4CA08303E83EC49B /* Build configuration list for PBXProject "SuperDuper Terminal" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -264,8 +264,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3341A553F145459CDFAB2B52 /* SwiftTerminal */,
-				C29E252009246FD393DAEF09 /* SwiftTerminalTests */,
+				3341A553F145459CDFAB2B52 /* SuperDuper Terminal */,
+				C29E252009246FD393DAEF09 /* SuperDuper TerminalTests */,
 			);
 		};
 /* End PBXProject section */
@@ -321,7 +321,7 @@
 /* Begin PBXTargetDependency section */
 		24745A090E8CF27B62C81669 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 3341A553F145459CDFAB2B52 /* SwiftTerminal */;
+			target = 3341A553F145459CDFAB2B52 /* SuperDuper Terminal */;
 			targetProxy = 1C1214021A61919E0B75A7B3 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -395,11 +395,12 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.fortunto2.swift-terminal.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "co.superduperai.swift-terminal.tests";
+				PRODUCT_NAME = "SuperDuper TerminalTests";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SwiftTerminal.app/SwiftTerminal";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SuperDuper Terminal.app/SuperDuper Terminal";
 			};
 			name = Release;
 		};
@@ -478,11 +479,12 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "com.fortunto2.swift-terminal.tests";
+				PRODUCT_BUNDLE_IDENTIFIER = "co.superduperai.swift-terminal.tests";
+				PRODUCT_NAME = "SuperDuper TerminalTests";
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SwiftTerminal.app/SwiftTerminal";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SuperDuper Terminal.app/SuperDuper Terminal";
 			};
 			name = Debug;
 		};
@@ -498,7 +500,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
-				INFOPLIST_KEY_CFBundleDisplayName = SwiftTerminal;
+				INFOPLIST_KEY_CFBundleDisplayName = "SuperDuper Terminal";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Authenticate to access your SSH private keys";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -513,7 +515,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "co.superduperai.swift-terminal";
-				PRODUCT_NAME = SwiftTerminal;
+				PRODUCT_NAME = "SuperDuper Terminal";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -535,7 +537,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
-				INFOPLIST_KEY_CFBundleDisplayName = SwiftTerminal;
+				INFOPLIST_KEY_CFBundleDisplayName = "SuperDuper Terminal";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Authenticate to access your SSH private keys";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -550,7 +552,7 @@
 				);
 				MARKETING_VERSION = 1.0.0;
 				PRODUCT_BUNDLE_IDENTIFIER = "co.superduperai.swift-terminal";
-				PRODUCT_NAME = SwiftTerminal;
+				PRODUCT_NAME = "SuperDuper Terminal";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -563,7 +565,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C5393E0D4CA08303E83EC49B /* Build configuration list for PBXProject "SwiftTerminal" */ = {
+		C5393E0D4CA08303E83EC49B /* Build configuration list for PBXProject "SuperDuper Terminal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				6DD83777C37FCB6603946F04 /* Debug */,
@@ -572,7 +574,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		D68D3B691C0C70D83BE92047 /* Build configuration list for PBXNativeTarget "SwiftTerminalTests" */ = {
+		D68D3B691C0C70D83BE92047 /* Build configuration list for PBXNativeTarget "SuperDuper TerminalTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				815836F7FF072569F9B6BE4A /* Debug */,
@@ -581,7 +583,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
-		F50FABDF125055BA75D2EB1D /* Build configuration list for PBXNativeTarget "SwiftTerminal" */ = {
+		F50FABDF125055BA75D2EB1D /* Build configuration list for PBXNativeTarget "SuperDuper Terminal" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F7595DE08121DBAD625261FB /* Debug */,
