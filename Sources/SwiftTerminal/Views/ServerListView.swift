@@ -41,24 +41,13 @@ struct ServerListView: View {
             }
             #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
+                settingsMenu
+            }
             #else
             ToolbarItem(placement: .automatic) {
-            #endif
-                Menu {
-                    Button {
-                        showingKeyManagement = true
-                    } label: {
-                        Label("SSH Keys", systemImage: "key.fill")
-                    }
-                    Button {
-                        showingSettings = true
-                    } label: {
-                        Label("Settings", systemImage: "gear")
-                    }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                }
+                settingsMenu
             }
+            #endif
         }
         .sheet(isPresented: $showingAddServer) {
             NavigationStack {
@@ -81,6 +70,23 @@ struct ServerListView: View {
     }
 
     // MARK: - Subviews
+
+    private var settingsMenu: some View {
+        Menu {
+            Button {
+                showingKeyManagement = true
+            } label: {
+                Label("SSH Keys", systemImage: "key.fill")
+            }
+            Button {
+                showingSettings = true
+            } label: {
+                Label("Settings", systemImage: "gear")
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+    }
 
     private var emptyState: some View {
         ContentUnavailableView {
