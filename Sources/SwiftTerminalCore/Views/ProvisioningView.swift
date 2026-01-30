@@ -1,16 +1,23 @@
 import SwiftUI
 
 /// One-tap VPS setup wizard — select features to install, then watch progress.
+/// Connects to the given server via SSH and runs provisioning scripts.
 public struct ProvisioningView: View {
+    let server: Server
+
     @Environment(\.dismiss) private var dismiss
+    @Environment(ServerStore.self) private var store
 
     @State private var config = ProvisioningConfig.default
     @State private var selectedFeatures: Set<ProvisioningFeature> = [
         .securityHardening, .claudeCode, .devTools
     ]
     @State private var isProvisioning = false
+    @State private var sshService = SSHService()
+    @State private var provisioningService: ProvisioningService?
     @State private var steps: [ProvisioningStep] = []
     @State private var logOutput: [String] = []
+    @State private var connectionError: String?
 
     public var body: some View {
         Group {
@@ -27,9 +34,14 @@ public struct ProvisioningView: View {
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(isProvisioning ? "Close" : "Cancel") {
+                    provisioningService?.cancel()
                     dismiss()
                 }
             }
+        }
+        .onAppear {
+            config.hostname = server.host
+            config.deployUsername = server.username
         }
     }
 
@@ -38,11 +50,7 @@ public struct ProvisioningView: View {
     private var configurationForm: some View {
         Form {
             Section("Server") {
-                TextField("Hostname", text: $config.hostname)
-                    .autocorrectionDisabled()
-                    #if os(iOS)
-                    .textInputAutocapitalization(.never)
-                    #endif
+                LabeledContent("Host", value: server.connectionString)
 
                 TextField("Deploy Username", text: $config.deployUsername)
                     .autocorrectionDisabled()
@@ -88,6 +96,13 @@ public struct ProvisioningView: View {
                 }
             }
 
+            if let connectionError {
+                Section {
+                    Label(connectionError, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                }
+            }
+
             Section {
                 Button {
                     startProvisioning()
@@ -103,7 +118,7 @@ public struct ProvisioningView: View {
             } header: {
                 EmptyView()
             } footer: {
-                Text("This will run setup scripts on the connected server. Make sure you're connected as root.")
+                Text("This will connect to the server and run setup scripts. Make sure the server is reachable and you have root/sudo access.")
             }
         }
     }
@@ -178,25 +193,63 @@ public struct ProvisioningView: View {
         config.features = Array(selectedFeatures).sorted { $0.rawValue < $1.rawValue }
         steps = config.features.map { ProvisioningStep(feature: $0) }
         isProvisioning = true
-        logOutput = ["🚀 Provisioning started..."]
+        connectionError = nil
+        logOutput = ["Connecting to \(server.connectionString)..."]
 
-        // In real implementation, this would use ProvisioningService with an SSH connection.
-        // For MVP, simulate progress.
         Task {
-            for index in steps.indices {
-                steps[index].status = .running
-                logOutput.append("▶ Running \(steps[index].feature.displayName)...")
-                try? await Task.sleep(for: .seconds(1))
-                steps[index].status = .completed
-                logOutput.append("✅ \(steps[index].feature.displayName) complete")
+            // Connect to the server
+            do {
+                try await connectToServer()
+            } catch {
+                connectionError = error.localizedDescription
+                logOutput.append("Connection failed: \(error.localizedDescription)")
+                isProvisioning = false
+                return
             }
-            logOutput.append("\n🏁 All done!")
+
+            logOutput.append("Connected. Starting provisioning...")
+
+            // Create provisioning service and run
+            let service = ProvisioningService(ssh: sshService)
+            provisioningService = service
+            await service.provision(config: config)
+
+            // Sync service state back to our view
+            steps = service.steps
+            logOutput = service.log
+
+            await sshService.disconnect()
+        }
+    }
+
+    private func connectToServer() async throws {
+        switch server.authMethod {
+        case .password:
+            // For provisioning, password auth isn't ideal — would need a prompt
+            // For now, try key-based auth which is the expected flow
+            throw SSHServiceError.authenticationFailed
+        case .key:
+            guard let keyID = server.keyID,
+                  let sshKey = store.key(for: keyID) else {
+                throw SSHServiceError.authenticationFailed
+            }
+            guard let privateKeyData = try KeychainService.load(key: sshKey.keychainTag) else {
+                throw SSHServiceError.authenticationFailed
+            }
+            try await sshService.connect(
+                to: server,
+                privateKeyData: privateKeyData,
+                keyType: sshKey.keyType
+            )
+        case .agent:
+            throw SSHServiceError.authenticationFailed
         }
     }
 }
 
 #Preview {
     NavigationStack {
-        ProvisioningView()
+        ProvisioningView(server: .preview)
     }
+    .environment(ServerStore())
 }

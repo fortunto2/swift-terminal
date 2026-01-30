@@ -8,17 +8,27 @@ public struct TerminalView: View {
     let server: Server
 
     @Environment(ServerStore.self) private var store
+    @AppStorage("autoReconnect") private var autoReconnect = true
     @State private var sshService = SSHService()
     @State private var connectionState: ConnectionState = .disconnected
     @State private var errorMessage: String?
     @State private var showPasswordPrompt = false
     @State private var passwordInput = ""
+    @State private var isKeyboardVisible = false
+    @State private var reconnectAttempt = 0
+    @State private var reconnectTask: Task<Void, Never>?
 
     enum ConnectionState {
         case disconnected
         case connecting
         case connected
         case failed
+        case reconnecting(attempt: Int)
+
+        var isConnected: Bool {
+            if case .connected = self { return true }
+            return false
+        }
     }
 
     public var body: some View {
@@ -33,11 +43,15 @@ public struct TerminalView: View {
                     if geo.size.width > 0 && geo.size.height > 0 {
                         TerminalViewRepresentable(
                             sshService: sshService,
-                            initialSize: geo.size
+                            containerSize: geo.size,
+                            isKeyboardVisible: $isKeyboardVisible
                         )
-                        .ignoresSafeArea(.keyboard)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .clipped()
                     }
                 }
+            case .reconnecting(let attempt):
+                reconnectingOverlay(attempt: attempt)
             case .failed:
                 failedOverlay
             }
@@ -47,9 +61,23 @@ public struct TerminalView: View {
         .toolbarBackground(.black, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
         .toolbar {
+            if connectionState.isConnected {
+                ToolbarItem(placement: .bottomBar) {
+                    Button {
+                        NotificationCenter.default.post(
+                            name: .toggleTerminalKeyboard, object: nil
+                        )
+                    } label: {
+                        Image(systemName: isKeyboardVisible
+                              ? "keyboard.chevron.compact.down"
+                              : "keyboard")
+                            .foregroundStyle(.green)
+                    }
+                }
+            }
             ToolbarItem(placement: .primaryAction) {
                 Menu {
-                    if connectionState == .connected {
+                    if connectionState.isConnected {
                         Button {
                             Task { await sshService.disconnect() }
                         } label: {
@@ -66,6 +94,8 @@ public struct TerminalView: View {
                 }
             }
         }
+        .toolbarBackground(.black, for: .bottomBar)
+        .toolbarColorScheme(.dark, for: .bottomBar)
         .alert("Enter Password", isPresented: $showPasswordPrompt) {
             SecureField("Password", text: $passwordInput)
             Button("Connect") {
@@ -80,7 +110,21 @@ public struct TerminalView: View {
             Text("Password for \(server.connectionString)")
         }
         .task {
+            setupDisconnectHandler()
             await connect()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .sshSessionDisconnected)) { _ in
+            guard case .connected = connectionState else { return }
+            if autoReconnect {
+                startAutoReconnect()
+            } else {
+                connectionState = .failed
+                errorMessage = "Connection lost"
+            }
+        }
+        .onDisappear {
+            reconnectTask?.cancel()
+            reconnectTask = nil
         }
     }
 
@@ -117,6 +161,87 @@ public struct TerminalView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.green)
+        }
+    }
+
+    private func reconnectingOverlay(attempt: Int) -> some View {
+        VStack(spacing: 16) {
+            ProgressView()
+                .controlSize(.large)
+                .tint(.orange)
+            Text("Reconnecting...")
+                .font(.headline)
+                .foregroundStyle(.orange)
+            Text("Attempt \(attempt)")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Button("Cancel") {
+                reconnectTask?.cancel()
+                reconnectTask = nil
+                connectionState = .failed
+                errorMessage = "Reconnect canceled"
+            }
+            .buttonStyle(.bordered)
+            .tint(.orange)
+        }
+    }
+
+    // MARK: - Auto-Reconnect
+
+    private func setupDisconnectHandler() {
+        sshService.onDisconnect = {
+            NotificationCenter.default.post(name: .sshSessionDisconnected, object: nil)
+        }
+    }
+
+    private func startAutoReconnect() {
+        reconnectTask?.cancel()
+        reconnectAttempt = 0
+        reconnectTask = Task {
+            let maxAttempts = 5
+            while reconnectAttempt < maxAttempts, !Task.isCancelled {
+                reconnectAttempt += 1
+                connectionState = .reconnecting(attempt: reconnectAttempt)
+
+                // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+                let delay = UInt64(pow(2.0, Double(reconnectAttempt - 1))) * 1_000_000_000
+                try? await Task.sleep(nanoseconds: delay)
+                if Task.isCancelled { return }
+
+                await sshService.disconnect()
+
+                do {
+                    try await reconnect()
+                    connectionState = .connected
+                    reconnectAttempt = 0
+                    return
+                } catch {
+                    // Try next attempt
+                }
+            }
+
+            if !Task.isCancelled {
+                connectionState = .failed
+                errorMessage = "Reconnect failed after \(maxAttempts) attempts"
+            }
+        }
+    }
+
+    private func reconnect() async throws {
+        switch server.authMethod {
+        case .key:
+            guard let keyID = server.keyID,
+                  let sshKey = store.key(for: keyID),
+                  let privateKeyData = try KeychainService.load(key: sshKey.keychainTag) else {
+                throw SSHServiceError.authenticationFailed
+            }
+            try await sshService.connect(
+                to: server,
+                privateKeyData: privateKeyData,
+                keyType: sshKey.keyType
+            )
+        default:
+            throw SSHServiceError.authenticationFailed
         }
     }
 
@@ -180,14 +305,15 @@ public struct TerminalView: View {
 
 public struct TerminalViewRepresentable: UIViewRepresentable {
     let sshService: SSHService
-    let initialSize: CGSize
+    var containerSize: CGSize
+    @Binding var isKeyboardVisible: Bool
 
     public func makeCoordinator() -> Coordinator {
-        Coordinator(sshService: sshService)
+        Coordinator(sshService: sshService, isKeyboardVisible: $isKeyboardVisible)
     }
 
     public func makeUIView(context: Context) -> SwiftTerm.TerminalView {
-        let frame = CGRect(origin: .zero, size: initialSize)
+        let frame = CGRect(origin: .zero, size: containerSize)
         let terminalView = SwiftTerm.TerminalView(frame: frame)
         terminalView.backgroundColor = .black
 
@@ -199,6 +325,12 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         // Set delegate to capture keyboard input
         terminalView.terminalDelegate = context.coordinator
         context.coordinator.terminalView = terminalView
+
+        // Replace default accessory with Claude Code keyboard bar
+        let accessory = ClaudeCodeAccessoryView { [weak sshService] data in
+            sshService?.shellWriter.write(data)
+        }
+        terminalView.inputAccessoryView = accessory
 
         // Start SSH shell and pipe output to terminal
         let cols = terminalView.getTerminal().cols
@@ -213,16 +345,57 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
 
         sshService.startShell(cols: cols, rows: rows)
 
+        // Listen for keyboard toggle from toolbar button
+        context.coordinator.toggleObserver = NotificationCenter.default.addObserver(
+            forName: .toggleTerminalKeyboard, object: nil, queue: .main
+        ) { [weak terminalView] _ in
+            MainActor.assumeIsolated {
+                guard let terminalView else { return }
+                if terminalView.isFirstResponder {
+                    _ = terminalView.resignFirstResponder()
+                } else {
+                    _ = terminalView.becomeFirstResponder()
+                }
+            }
+        }
+
+        // Track keyboard show/hide to update binding
+        context.coordinator.showObserver = NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main
+        ) { _ in
+            DispatchQueue.main.async {
+                context.coordinator.isKeyboardVisible.wrappedValue = true
+            }
+        }
+        context.coordinator.hideObserver = NotificationCenter.default.addObserver(
+            forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main
+        ) { _ in
+            DispatchQueue.main.async {
+                context.coordinator.isKeyboardVisible.wrappedValue = false
+            }
+        }
+
         // Make terminal first responder for keyboard
         DispatchQueue.main.async {
-            terminalView.becomeFirstResponder()
+            _ = terminalView.becomeFirstResponder()
         }
 
         return terminalView
     }
 
     public func updateUIView(_ uiView: SwiftTerm.TerminalView, context: Context) {
-        // Size changes handled by SwiftTerm internally
+        // Resize terminal when container changes (keyboard show/hide)
+        let newSize = containerSize
+        if abs(uiView.frame.size.height - newSize.height) > 1
+            || abs(uiView.frame.size.width - newSize.width) > 1 {
+            uiView.frame = CGRect(origin: .zero, size: newSize)
+            uiView.setNeedsLayout()
+            uiView.layoutIfNeeded()
+        }
+    }
+
+    public static func dismantleUIView(_ uiView: SwiftTerm.TerminalView, coordinator: Coordinator) {
+        coordinator.removeObservers()
     }
 
     // MARK: - Coordinator (TerminalViewDelegate)
@@ -230,9 +403,24 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
     public class Coordinator: NSObject, SwiftTerm.TerminalViewDelegate {
         let sshService: SSHService
         weak var terminalView: SwiftTerm.TerminalView?
+        var isKeyboardVisible: Binding<Bool>
+        var toggleObserver: Any?
+        var showObserver: Any?
+        var hideObserver: Any?
 
-        init(sshService: SSHService) {
+        init(sshService: SSHService, isKeyboardVisible: Binding<Bool>) {
             self.sshService = sshService
+            self.isKeyboardVisible = isKeyboardVisible
+        }
+
+        func removeObservers() {
+            if let obs = toggleObserver { NotificationCenter.default.removeObserver(obs) }
+            if let obs = showObserver { NotificationCenter.default.removeObserver(obs) }
+            if let obs = hideObserver { NotificationCenter.default.removeObserver(obs) }
+        }
+
+        deinit {
+            removeObservers()
         }
 
         /// Called when user types — send input to SSH shell
@@ -256,6 +444,11 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         }
         public func iTermContent(source: SwiftTerm.TerminalView, content: ArraySlice<UInt8>) {}
     }
+}
+
+extension Notification.Name {
+    static let toggleTerminalKeyboard = Notification.Name("toggleTerminalKeyboard")
+    static let sshSessionDisconnected = Notification.Name("sshSessionDisconnected")
 }
 
 #Preview {

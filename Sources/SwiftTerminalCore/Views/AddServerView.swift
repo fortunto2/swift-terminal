@@ -127,7 +127,14 @@ public struct AddServerView: View {
         }
         .sheet(isPresented: $showingProvisioningView) {
             NavigationStack {
-                ProvisioningView()
+                ProvisioningView(server: Server(
+                    name: name.isEmpty ? host : name,
+                    host: host,
+                    port: port,
+                    username: username,
+                    authMethod: authMethod,
+                    keyID: selectedKeyID
+                ))
             }
         }
     }

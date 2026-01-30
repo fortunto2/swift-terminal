@@ -49,6 +49,9 @@ public final class SSHService {
     /// Called when shell output arrives. Set before starting shell.
     public var onOutput: (@Sendable (Data) -> Void)?
 
+    /// Called when the shell session ends unexpectedly (e.g. network drop).
+    public var onDisconnect: (@Sendable () -> Void)?
+
     public init() {}
 
     // MARK: - Connect
@@ -103,6 +106,7 @@ public final class SSHService {
         guard let client else { return }
 
         let onOutput = self.onOutput
+        let onDisconnect = self.onDisconnect
         let writer = self.shellWriter
 
         let ptyRequest = SSHChannelRequestEvent.PseudoTerminalRequest(
@@ -132,10 +136,11 @@ public final class SSHService {
                     }
                 }
             } catch {
-                // Shell session ended
+                // Shell session ended unexpectedly
             }
 
             writer.clear()
+            onDisconnect?()
         }
     }
 

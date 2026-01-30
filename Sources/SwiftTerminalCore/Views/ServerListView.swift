@@ -6,6 +6,7 @@ public struct ServerListView: View {
     @State private var showingAddServer = false
     @State private var showingSettings = false
     @State private var showingKeyManagement = false
+    @State private var provisioningServer: Server?
     @State private var selectedServer: Server?
     @State private var searchText = ""
 
@@ -66,6 +67,11 @@ public struct ServerListView: View {
                 SettingsView()
             }
         }
+        .sheet(item: $provisioningServer) { server in
+            NavigationStack {
+                ProvisioningView(server: server)
+            }
+        }
         .navigationDestination(item: $selectedServer) { server in
             TerminalView(server: server)
         }
@@ -110,6 +116,26 @@ public struct ServerListView: View {
             ForEach(filteredServers) { server in
                 ServerRow(server: server) {
                     selectedServer = server
+                }
+                .swipeActions(edge: .leading) {
+                    Button {
+                        provisioningServer = server
+                    } label: {
+                        Label("Provision", systemImage: "play.fill")
+                    }
+                    .tint(.purple)
+                }
+                .contextMenu {
+                    Button {
+                        selectedServer = server
+                    } label: {
+                        Label("Connect", systemImage: "terminal")
+                    }
+                    Button {
+                        provisioningServer = server
+                    } label: {
+                        Label("Provision", systemImage: "play.fill")
+                    }
                 }
             }
             .onDelete { offsets in
