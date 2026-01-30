@@ -30,9 +30,13 @@ struct OnboardingView: View {
             }
         }
         .sheet(isPresented: $showingAddServer) {
+            #if os(iOS)
             NavigationStack {
                 AddServerView()
             }
+            #else
+            MacAddServerView()
+            #endif
         }
     }
 

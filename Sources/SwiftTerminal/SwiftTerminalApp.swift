@@ -7,9 +7,11 @@ struct SwiftTerminalApp: App {
 
     var body: some Scene {
         WindowGroup {
-            LockScreenView()
-                .environment(serverStore)
-                .environment(sessionManager)
+            #if os(iOS)
+            iOSMainView()
+            #else
+            MacMainView()
+            #endif
         }
         #if os(macOS)
         .defaultSize(width: 900, height: 600)
@@ -26,6 +28,15 @@ struct SwiftTerminalApp: App {
                 }
                 .keyboardShortcut("k")
             }
+        }
+        #endif
+        .environment(serverStore)
+        .environment(sessionManager)
+
+        #if os(macOS)
+        Settings {
+            SettingsView()
+                .environment(serverStore)
         }
         #endif
     }

@@ -85,31 +85,47 @@ public struct KeychainService: Sendable {
     // MARK: - SSH Key Operations
 
     /// Save a private key (Data) to the Keychain with biometric protection.
+    /// On macOS, always uses plain Keychain (no biometrics).
     public static func savePrivateKey(_ privateKeyData: Data, tag: String, requireBiometrics: Bool = true) throws {
-        let accessFlags: SecAccessControlCreateFlags = requireBiometrics
-            ? [.biometryCurrentSet]
-            : []
-
-        let access = SecAccessControlCreateWithFlags(
-            nil,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            accessFlags,
-            nil
-        )
-
         // Delete existing
         try? delete(key: tag)
 
-        var query: [String: Any] = [
+        #if os(iOS)
+        if requireBiometrics {
+            let access = SecAccessControlCreateWithFlags(
+                nil,
+                kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+                [.biometryCurrentSet],
+                nil
+            )
+
+            var query: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: tag,
+                kSecValueData as String: privateKeyData,
+            ]
+
+            if let access {
+                query[kSecAttrAccessControl as String] = access
+            }
+
+            let status = SecItemAdd(query as CFDictionary, nil)
+            guard status == errSecSuccess else {
+                throw KeychainError.saveFailed(status)
+            }
+            return
+        }
+        #endif
+
+        // Plain Keychain save (macOS always, iOS when biometrics not required)
+        let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: tag,
             kSecValueData as String: privateKeyData,
+            kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
         ]
-
-        if let access {
-            query[kSecAttrAccessControl as String] = access
-        }
 
         let status = SecItemAdd(query as CFDictionary, nil)
         guard status == errSecSuccess else {

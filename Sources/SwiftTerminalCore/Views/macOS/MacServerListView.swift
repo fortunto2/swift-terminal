@@ -1,19 +1,16 @@
 import SwiftUI
+import AppKit
 
-/// Main view — shows a list of saved servers with connection actions.
-public struct ServerListView: View {
+/// macOS server list for the detail pane.
+struct MacServerListView: View {
     @Environment(ServerStore.self) private var store
     @Environment(SessionManager.self) private var sessionManager
     @State private var showingAddServer = false
-    @State private var showingSettings = false
-    @State private var showingKeyManagement = false
-    @State private var provisioningServer: Server?
     @State private var editingServer: Server?
+    @State private var provisioningServer: Server?
     @State private var showTerminal = false
     @State private var searchText = ""
     @State private var onboardingSkipped = false
-
-    public init() {}
 
     private var filteredServers: [Server] {
         if searchText.isEmpty {
@@ -27,7 +24,7 @@ public struct ServerListView: View {
         }
     }
 
-    public var body: some View {
+    var body: some View {
         Group {
             if store.servers.isEmpty && sessionManager.sessions.isEmpty {
                 emptyState
@@ -45,79 +42,32 @@ public struct ServerListView: View {
                     Image(systemName: "plus")
                 }
             }
-            #if os(iOS)
-            ToolbarItem(placement: .topBarLeading) {
-                settingsMenu
-            }
-            #else
-            ToolbarItem(placement: .automatic) {
-                settingsMenu
-            }
-            #endif
         }
         .sheet(isPresented: $showingAddServer) {
-            NavigationStack {
-                AddServerView()
-            }
-        }
-        .sheet(isPresented: $showingKeyManagement) {
-            NavigationStack {
-                KeyManagementView()
-            }
-        }
-        .sheet(isPresented: $showingSettings) {
-            NavigationStack {
-                SettingsView()
-            }
+            MacAddServerView()
         }
         .sheet(item: $editingServer) { server in
-            NavigationStack {
-                AddServerView(existingServer: server)
-            }
+            MacAddServerView(existingServer: server)
         }
         .sheet(item: $provisioningServer) { server in
             NavigationStack {
                 ProvisioningView(server: server)
             }
+            .frame(minWidth: 520, minHeight: 500)
         }
-        #if os(iOS)
-        .fullScreenCover(isPresented: $showTerminal) {
-            ActiveTerminalContainerView()
-        }
-        #else
         .sheet(isPresented: $showTerminal) {
-            ActiveTerminalContainerView()
-                .frame(minWidth: 600, minHeight: 400)
+            MacTerminalContainerView()
+                .frame(minWidth: 700, minHeight: 500)
         }
-        #endif
         .onAppear {
-            // Restore persisted sessions on first launch
             sessionManager.restoreSessionsIfNeeded(from: store)
-            // If sessions exist (restored or still running), show terminal
             if !sessionManager.sessions.isEmpty {
                 showTerminal = true
             }
         }
     }
 
-    // MARK: - Subviews
-
-    private var settingsMenu: some View {
-        Menu {
-            Button {
-                showingKeyManagement = true
-            } label: {
-                Label("SSH Keys", systemImage: "key.fill")
-            }
-            Button {
-                showingSettings = true
-            } label: {
-                Label("Settings", systemImage: "gear")
-            }
-        } label: {
-            Image(systemName: "ellipsis.circle")
-        }
-    }
+    // MARK: - Empty State
 
     @ViewBuilder
     private var emptyState: some View {
@@ -143,11 +93,11 @@ public struct ServerListView: View {
         }
     }
 
+    // MARK: - Server List
+
     @ViewBuilder
     private var serverList: some View {
-        @Bindable var store = store
         List {
-            // Active Sessions section
             if !sessionManager.sessions.isEmpty {
                 Section("Active Sessions") {
                     ForEach(sessionManager.sessions) { session in
@@ -173,49 +123,25 @@ public struct ServerListView: View {
                             }
                         }
                         .tint(.primary)
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
+                        .contextMenu {
+                            Button {
                                 sessionManager.closeSession(session.id)
                             } label: {
-                                Label("Close", systemImage: "xmark.circle")
+                                Label("Close Session", systemImage: "xmark.circle")
                             }
                         }
                     }
                 }
             }
 
-            // Servers section
             Section(sessionManager.sessions.isEmpty ? "" : "Servers") {
                 ForEach(filteredServers) { server in
-                    ServerRow(
+                    MacServerRow(
                         server: server,
                         hasActiveSessions: sessionManager.hasSessions(for: server)
                     ) {
                         sessionManager.createSession(for: server)
                         showTerminal = true
-                    }
-                    .swipeActions(edge: .leading) {
-                        Button {
-                            provisioningServer = server
-                        } label: {
-                            Label("Provision", systemImage: "play.fill")
-                        }
-                        .tint(.purple)
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button(role: .destructive) {
-                            if let idx = store.servers.firstIndex(where: { $0.id == server.id }) {
-                                store.deleteServer(at: IndexSet(integer: idx))
-                            }
-                        } label: {
-                            Label("Delete", systemImage: "trash")
-                        }
-                        Button {
-                            editingServer = server
-                        } label: {
-                            Label("Edit", systemImage: "pencil")
-                        }
-                        .tint(.orange)
                     }
                     .contextMenu {
                         Button {
@@ -234,24 +160,27 @@ public struct ServerListView: View {
                         } label: {
                             Label("Provision", systemImage: "play.fill")
                         }
+                        Divider()
+                        Button(role: .destructive) {
+                            store.deleteServer(server)
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
                     }
-                }
-                .onDelete { offsets in
-                    store.deleteServer(at: offsets)
                 }
             }
         }
     }
 }
 
-// MARK: - Server Row
+// MARK: - macOS Server Row
 
-private struct ServerRow: View {
+private struct MacServerRow: View {
     let server: Server
     let hasActiveSessions: Bool
     let onConnect: () -> Void
 
-    public var body: some View {
+    var body: some View {
         Button(action: onConnect) {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
@@ -283,19 +212,8 @@ private struct ServerRow: View {
                 Spacer()
                 Image(systemName: server.authMethod.systemImage)
                     .foregroundStyle(.secondary)
-                Image(systemName: "chevron.right")
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
             }
         }
         .tint(.primary)
     }
-}
-
-#Preview {
-    NavigationStack {
-        ServerListView()
-    }
-    .environment(ServerStore())
-    .environment(SessionManager())
 }

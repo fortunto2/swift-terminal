@@ -99,25 +99,41 @@ public final class ServerStore {
 
     private func saveServers() {
         guard let data = try? JSONEncoder().encode(servers) else { return }
-        try? KeychainService.save(key: Self.serversKey, data: data)
+        do {
+            try KeychainService.save(key: Self.serversKey, data: data)
+        } catch {
+            print("[ServerStore] Failed to save servers: \(error)")
+        }
     }
 
     private func loadServers() {
-        guard let data = try? KeychainService.load(key: Self.serversKey),
-              let decoded = try? JSONDecoder().decode([Server].self, from: data)
-        else { return }
-        servers = decoded
+        do {
+            guard let data = try KeychainService.load(key: Self.serversKey),
+                  let decoded = try? JSONDecoder().decode([Server].self, from: data)
+            else { return }
+            servers = decoded
+        } catch {
+            print("[ServerStore] Failed to load servers: \(error)")
+        }
     }
 
     private func saveKeys() {
         guard let data = try? JSONEncoder().encode(sshKeys) else { return }
-        try? KeychainService.save(key: Self.keysKey, data: data)
+        do {
+            try KeychainService.save(key: Self.keysKey, data: data)
+        } catch {
+            print("[ServerStore] Failed to save keys: \(error)")
+        }
     }
 
     private func loadKeys() {
-        guard let data = try? KeychainService.load(key: Self.keysKey),
-              let decoded = try? JSONDecoder().decode([SSHKey].self, from: data)
-        else { return }
-        sshKeys = decoded
+        do {
+            guard let data = try KeychainService.load(key: Self.keysKey),
+                  let decoded = try? JSONDecoder().decode([SSHKey].self, from: data)
+            else { return }
+            sshKeys = decoded
+        } catch {
+            print("[ServerStore] Failed to load keys: \(error)")
+        }
     }
 }
