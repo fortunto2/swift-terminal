@@ -204,7 +204,9 @@ private struct ImportKeyView: View {
                     .font(.system(.caption, design: .monospaced))
                     .frame(minHeight: 80)
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
             }
 
             Section("Private Key") {
@@ -212,7 +214,9 @@ private struct ImportKeyView: View {
                     .font(.system(.caption, design: .monospaced))
                     .frame(minHeight: 100)
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
             } footer: {
                 Text("The private key will be stored securely in the iOS Keychain.")
             }

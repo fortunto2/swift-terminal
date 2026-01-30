@@ -31,20 +31,26 @@ struct AddServerView: View {
             Section("Connection") {
                 TextField("Name", text: $name, prompt: Text("My Server"))
                 TextField("Host", text: $host, prompt: Text("192.168.1.1 or example.com"))
-                    .textContentType(.URL)
                     .autocorrectionDisabled()
+                    #if os(iOS)
+                    .textContentType(.URL)
                     .textInputAutocapitalization(.never)
+                    #endif
                 HStack {
                     Text("Port")
                     Spacer()
                     TextField("Port", value: $port, format: .number)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 }
                 TextField("Username", text: $username, prompt: Text("root"))
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
             }
 
             Section("Authentication") {
@@ -73,7 +79,9 @@ struct AddServerView: View {
             Section("Tags") {
                 TextField("Tags (comma-separated)", text: $tags, prompt: Text("dev, claude, prod"))
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
             }
 
             if !isEditing {

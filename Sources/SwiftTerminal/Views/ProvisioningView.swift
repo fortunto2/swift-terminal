@@ -38,11 +38,15 @@ struct ProvisioningView: View {
             Section("Server") {
                 TextField("Hostname", text: $config.hostname)
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
 
                 TextField("Deploy Username", text: $config.deployUsername)
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
 
                 HStack {
                     Text("SSH Port")
@@ -50,7 +54,9 @@ struct ProvisioningView: View {
                     TextField("Port", value: $config.sshPort, format: .number)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 }
             }
 
@@ -137,22 +143,21 @@ struct ProvisioningView: View {
 
     // MARK: - Helpers
 
+    @ViewBuilder
     private func statusIcon(for status: ProvisioningStepStatus) -> some View {
-        Group {
-            switch status {
-            case .pending:
-                Image(systemName: "circle")
-                    .foregroundStyle(.secondary)
-            case .running:
-                ProgressView()
-                    .controlSize(.small)
-            case .completed:
-                Image(systemName: "checkmark.circle.fill")
-                    .foregroundStyle(.green)
-            case .failed:
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundStyle(.red)
-            }
+        switch status {
+        case .pending:
+            Image(systemName: "circle")
+                .foregroundStyle(.secondary)
+        case .running:
+            ProgressView()
+                .controlSize(.small)
+        case .completed:
+            Image(systemName: "checkmark.circle.fill")
+                .foregroundStyle(.green)
+        case .failed:
+            Image(systemName: "xmark.circle.fill")
+                .foregroundStyle(.red)
         }
     }
 

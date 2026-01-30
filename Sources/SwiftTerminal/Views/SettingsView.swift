@@ -19,11 +19,15 @@ struct SettingsView: View {
                     TextField("Port", value: $defaultPort, format: .number)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 80)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 }
                 TextField("Default Username", text: $defaultUsername)
                     .autocorrectionDisabled()
+                    #if os(iOS)
                     .textInputAutocapitalization(.never)
+                    #endif
                 Toggle("Auto-Reconnect", isOn: $autoReconnect)
             }
 
@@ -47,10 +51,10 @@ struct SettingsView: View {
 
             Section("About") {
                 LabeledContent("Version", value: "0.1.0")
-                LabeledContent("Swift", value: "6.2")
+                LabeledContent("Swift", value: "6.1")
                 LabeledContent("Build", value: "MVP")
 
-                Link(destination: URL(string: "https://github.com/nicksavarese/swift-terminal")!) {
+                Link(destination: URL(string: "https://github.com/fortunto2/swift-terminal")!) {
                     Label("GitHub Repository", systemImage: "link")
                 }
             }

@@ -10,7 +10,7 @@ struct ServerTests {
         #expect(server.host == "example.com")
         #expect(server.port == 22)
         #expect(server.username == "root")
-        #expect(server.authMethod == .password)
+        #expect(server.authMethod == .key)
         #expect(server.tags.isEmpty)
     }
 

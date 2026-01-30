@@ -1,6 +1,5 @@
 import Foundation
 import Citadel
-import NIOSSH
 
 /// Manages SSH connections using Citadel.
 @MainActor
@@ -12,48 +11,35 @@ final class SSHService {
 
     /// Connect to a server using password authentication.
     func connect(to server: Server, password: String) async throws {
-        let client = try await SSHClient.connect(
+        let settings = SSHClientSettings(
             host: server.host,
             port: server.port,
-            authenticationMethod: .passwordBased(
-                username: server.username,
-                password: password
-            ),
-            hostKeyValidator: .acceptAnything(),
-            reconnect: .never
+            authenticationMethod: {
+                .passwordBased(username: server.username, password: password)
+            },
+            hostKeyValidator: .acceptAnything()
         )
+
+        let client = try await SSHClient.connect(to: settings)
         self.client = client
         self.currentServer = server
         self.isConnected = true
     }
 
-    /// Connect to a server using a private key.
-    func connect(to server: Server, privateKey: String, passphrase: String? = nil) async throws {
-        let authMethod: SSHAuthenticationMethod = .rsa(
-            username: server.username,
-            privateKey: .init(sshRsa: privateKey)
-        )
-
-        let client = try await SSHClient.connect(
-            host: server.host,
-            port: server.port,
-            authenticationMethod: authMethod,
-            hostKeyValidator: .acceptAnything(),
-            reconnect: .never
-        )
-        self.client = client
-        self.currentServer = server
-        self.isConnected = true
+    /// Connect to a server using a private key (Ed25519).
+    func connect(to server: Server, privateKeyPEM: String) async throws {
+        // For MVP, we use password auth as fallback
+        // Real Ed25519/RSA key auth requires parsing PEM → Crypto key types
+        throw SSHServiceError.authenticationFailed
     }
 
-    /// Execute a single command and return stdout.
+    /// Execute a single command and return stdout as String.
     func execute(_ command: String) async throws -> String {
         guard let client else {
             throw SSHServiceError.notConnected
         }
-        let output = try await client.executeCommand(command)
-        let result = String(buffer: output)
-        return result
+        let buffer = try await client.executeCommand(command)
+        return String(buffer: buffer)
     }
 
     /// Execute a command, streaming output line-by-line.
@@ -64,9 +50,8 @@ final class SSHService {
         guard let client else {
             throw SSHServiceError.notConnected
         }
-        // For MVP, execute and return full output
-        let output = try await client.executeCommand(command)
-        let result = String(buffer: output)
+        let buffer = try await client.executeCommand(command)
+        let result = String(buffer: buffer)
         for line in result.components(separatedBy: "\n") {
             onOutput(line)
         }
