@@ -15,7 +15,7 @@ Lightweight (<15MB) iOS SSH client with one-tap VPS provisioning for Claude Code
 | Component | Choice | Size |
 |-----------|--------|------|
 | SSH | SwiftNIO SSH + Citadel | ~3-4 MB |
-| Terminal | SwiftTerm | ~1-2 MB |
+| Terminal | [SwiftTerm 1.5.1 fork](https://github.com/fortunto2/SwiftTerm) + synchronized output (branch `stable-1.5.1-sync-output`). ⚠️ Upstream не обновлять до фикса [#405](https://github.com/migueldeicaza/SwiftTerm/issues/405) | ~1-2 MB |
 | Key Storage | iOS Keychain + Secure Enclave | 0 MB |
 | **Total** | | **5-8 MB** |
 
@@ -132,7 +132,7 @@ Device ID: 00008120-0011754C2208201E (Rust's iPhone)
 
 | Параметр | Значение |
 |----------|----------|
-| Bundle ID | `com.fortunto2.swift-terminal` |
+| Bundle ID | `co.superduperai.swift-terminal` |
 | Min iOS | 18.0 |
 | Swift | 6.0 |
 | Dev Team | `8N495BBBLM` |
@@ -144,17 +144,42 @@ Device ID: 00008120-0011754C2208201E (Rust's iPhone)
 1. ~~SSH connection (Citadel + SwiftNIO SSH)~~ ✅
 2. ~~SwiftTerm interactive terminal~~ ✅
 3. ~~iOS Keychain + biometrics for keys~~ ✅
-4. Basic VPS provisioning script (security + Claude Code)
+4. ~~VPS provisioning script (security + Claude Code)~~ ✅
+5. ~~Claude Code keyboard bar~~ ✅
+6. ~~Auto-reconnect~~ ✅
+7. Multi-tab sessions (2-3 concurrent shells, swipe navigation)
+8. Text selection & copy in terminal
+9. Mosh support (iOS kills SSH after 20-30s in background)
+10. SSH Agent forwarding (нужен для git на удалённых серверах)
+
+### V1.0 (Launch + 1-2 months)
+11. SSH tunneling / Port forwarding (-L, -R, -D)
+12. Custom themes (Dark, Solarized, Dracula, Nord, Monokai)
+13. Custom fonts (Fira Code, JetBrains Mono, SF Mono, Menlo)
+14. Pinch-to-zoom in terminal
+15. One-tap snippets / Saved commands
 
 ### V1.1 (+2 months)
-5. Files.app integration (File Provider)
-6. Cross-device sync (iCloud or custom)
-7. One-tap snippets
+16. Jump hosts / ProxyCommand / Bastion support
+17. Files.app integration (File Provider)
+18. External display support (iPad + 4K monitor)
+19. Cross-device sync (iCloud or custom)
+20. Local UNIX commands (ls, cat, ping, curl)
+
+### V1.5 — SwiftTerm Deep Integration
+26. Terminal image rendering (Sixel / iTerm2 / Kitty graphics — `imgcat` support)
+27. Clickable URLs / Hyperlinks in terminal output (`requestOpenLink` delegate)
+28. Terminal title & working directory tracking (tab labels, nav bar)
+29. Session recording (Asciinema `.cast` format)
+30. Option-tap cursor positioning (tap to move cursor in shell)
+31. OSC 9;4 Progress reporting (native progress bar for long tasks)
 
 ### V2.0
-8. Push notifications ("Claude needs your input")
-9. Voice-to-prompt (dictation)
-10. GitHub/GitLab integration
+32. Push notifications ("Claude needs your input")
+33. WebAuthn / FIDO2 / YubiKey authentication
+34. Tailscale integration
+35. GitHub/GitLab integration
+36. VS Code Server / Codespaces support (if aligns with Claude Code focus)
 
 ## Monetization
 | Tier | Price |
@@ -174,7 +199,7 @@ Device ID: 00008120-0011754C2208201E (Rust's iPhone)
 ## Competitors
 - Termius (Free/$10/mo) — 80-100MB, SFTP only in paid
 - Prompt 3 ($20/yr or $100) — expensive, slow updates
-- Blink Shell ($20/yr) — open source, VS Code integration
+- Blink Shell ($20/yr) — open source, Mosh, VS Code integration, Files.app, custom themes/fonts, multi-tab, SSH tunnels, local UNIX commands, external display
 - Secure ShellFish ($15/yr or $30) — Files.app, tmux
 - Shelly (Free/$4-5) — PuTTY-based, lightweight
 - Happy Coder — free, open-source, E2E encrypted (main competitor)
