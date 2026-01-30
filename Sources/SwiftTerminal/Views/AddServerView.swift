@@ -91,13 +91,17 @@ struct AddServerView: View {
                     } label: {
                         Label("Set Up with One-Tap Provisioning", systemImage: "wand.and.stars")
                     }
+                } header: {
+                    EmptyView()
                 } footer: {
                     Text("Automatically harden security, install Claude Code, and set up dev tools.")
                 }
             }
         }
         .navigationTitle(isEditing ? "Edit Server" : "Add Server")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }

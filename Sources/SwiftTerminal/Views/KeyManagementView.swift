@@ -17,7 +17,9 @@ struct KeyManagementView: View {
             }
         }
         .navigationTitle("SSH Keys")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Done") { dismiss() }
@@ -145,12 +147,16 @@ private struct GenerateKeyView: View {
                 .buttonStyle(.borderedProminent)
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
+            } header: {
+                EmptyView()
             } footer: {
-                Text("The private key will be stored securely in the iOS Keychain with biometric protection.")
+                Text("The private key will be stored securely in the Keychain with biometric protection.")
             }
         }
         .navigationTitle("Generate SSH Key")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
@@ -209,7 +215,7 @@ private struct ImportKeyView: View {
                     #endif
             }
 
-            Section("Private Key") {
+            Section {
                 TextEditor(text: $privateKey)
                     .font(.system(.caption, design: .monospaced))
                     .frame(minHeight: 100)
@@ -217,8 +223,10 @@ private struct ImportKeyView: View {
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     #endif
+            } header: {
+                Text("Private Key")
             } footer: {
-                Text("The private key will be stored securely in the iOS Keychain.")
+                Text("The private key will be stored securely in the Keychain.")
             }
 
             Section {
@@ -237,7 +245,9 @@ private struct ImportKeyView: View {
             }
         }
         .navigationTitle("Import SSH Key")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }

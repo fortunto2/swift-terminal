@@ -39,7 +39,11 @@ struct ServerListView: View {
                     Image(systemName: "plus")
                 }
             }
+            #if os(iOS)
             ToolbarItem(placement: .topBarLeading) {
+            #else
+            ToolbarItem(placement: .automatic) {
+            #endif
                 Menu {
                     Button {
                         showingKeyManagement = true

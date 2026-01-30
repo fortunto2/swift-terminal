@@ -21,7 +21,9 @@ struct ProvisioningView: View {
             }
         }
         .navigationTitle("Provision Server")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button(isProvisioning ? "Close" : "Cancel") {
@@ -98,6 +100,8 @@ struct ProvisioningView: View {
                 .buttonStyle(.borderedProminent)
                 .listRowInsets(EdgeInsets())
                 .listRowBackground(Color.clear)
+            } header: {
+                EmptyView()
             } footer: {
                 Text("This will run setup scripts on the connected server. Make sure you're connected as root.")
             }

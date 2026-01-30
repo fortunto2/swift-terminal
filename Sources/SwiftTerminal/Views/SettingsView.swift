@@ -43,8 +43,10 @@ struct SettingsView: View {
                 }
             }
 
-            Section("Security") {
+            Section {
                 Toggle("Require Biometrics for Keys", isOn: $requireBiometrics)
+            } header: {
+                Text("Security")
             } footer: {
                 Text("When enabled, Face ID or Touch ID is required to use SSH private keys.")
             }
@@ -69,7 +71,9 @@ struct SettingsView: View {
             }
         }
         .navigationTitle("Settings")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Done") { dismiss() }
