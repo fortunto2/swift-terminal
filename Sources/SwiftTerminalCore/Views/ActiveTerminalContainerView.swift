@@ -1,4 +1,3 @@
-#if canImport(UIKit)
 import SwiftUI
 
 /// Full-screen container that shows the tab strip + active terminal session.
@@ -28,8 +27,10 @@ public struct ActiveTerminalContainerView: View {
             }
         }
         .background(.black)
+        #if os(iOS)
         .toolbarBackground(.black, for: .navigationBar)
         .toolbarColorScheme(.dark, for: .navigationBar)
+        #endif
         .preferredColorScheme(.dark)
         .onReceive(NotificationCenter.default.publisher(for: .dismissTerminalContainer)) { _ in
             dismiss()
@@ -41,4 +42,3 @@ public struct ActiveTerminalContainerView: View {
         }
     }
 }
-#endif

@@ -1,4 +1,9 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 /// Manage SSH keys — generate, import, list, and delete.
 public struct KeyManagementView: View {
@@ -117,13 +122,16 @@ public struct KeyManagementView: View {
     private func copyPublicKey(_ key: SSHKey) {
         #if canImport(UIKit)
         UIPasteboard.general.string = key.publicKey
+        #elseif os(macOS)
+        NSPasteboard.general.clearContents()
+        NSPasteboard.general.setString(key.publicKey, forType: .string)
         #endif
     }
 }
 
 // MARK: - Generate Key Sheet
 
-private struct GenerateKeyView: View {
+struct GenerateKeyView: View {
     @Environment(ServerStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
@@ -214,6 +222,9 @@ private struct GenerateKeyView: View {
             // Copy public key to clipboard
             #if canImport(UIKit)
             UIPasteboard.general.string = generated.publicKeyOpenSSH
+            #elseif os(macOS)
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(generated.publicKeyOpenSSH, forType: .string)
             #endif
 
             isGenerating = false

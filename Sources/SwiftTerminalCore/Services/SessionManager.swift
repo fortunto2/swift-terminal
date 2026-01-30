@@ -1,30 +1,27 @@
-#if canImport(UIKit)
 import Foundation
 import SwiftUI
 
-/// Persisted info about a previous session for quick reconnect after app restart.
-struct RecentSession: Codable, Identifiable {
-    var id: UUID       // server ID
+/// Persisted snapshot of a session — saved to UserDefaults, restored on app launch.
+private struct PersistedSession: Codable {
+    var serverID: UUID
     var tmuxName: String
-    var connectedAt: Date
+    var index: Int
 }
 
 /// Manages multiple concurrent SSH sessions with tab-style switching.
-/// Persists recent session info for quick reconnect after app restart.
+/// Persists session list so sessions auto-reconnect after app restart.
 @MainActor
 @Observable
 public final class SessionManager {
     public private(set) var sessions: [Session] = []
     public var activeSessionID: UUID?
     private var nextIndex = 0
+    private var hasRestored = false
 
-    // Persistence
-    private static let recentsKey = "recentSessions"
-    private(set) var recentServerIDs: [UUID] = []
+    private static let storageKey = "persistedSessions"
+    private static let indexKey = "sessionNextIndex"
 
-    public init() {
-        loadRecents()
-    }
+    public init() {}
 
     /// The currently visible session.
     public var activeSession: Session? {
@@ -47,15 +44,47 @@ public final class SessionManager {
         sessions.contains { $0.server.id == server.id }
     }
 
-    /// Server IDs that had recent sessions (for quick reconnect after restart).
-    /// Filters out servers that already have active sessions.
-    public func recentServersForReconnect(from allServers: [Server]) -> [Server] {
-        let activeServerIDs = Set(sessions.map { $0.server.id })
-        return recentServerIDs.compactMap { id in
-            guard !activeServerIDs.contains(id) else { return nil }
-            return allServers.first { $0.id == id }
+    // MARK: - Restore persisted sessions
+
+    /// Call once after ServerStore is available (e.g. from ServerListView.onAppear).
+    /// Recreates Session objects from persisted data and auto-connects them.
+    public func restoreSessionsIfNeeded(from store: ServerStore) {
+        guard !hasRestored else { return }
+        hasRestored = true
+
+        nextIndex = UserDefaults.standard.integer(forKey: Self.indexKey)
+
+        guard let data = UserDefaults.standard.data(forKey: Self.storageKey),
+              let persisted = try? JSONDecoder().decode([PersistedSession].self, from: data),
+              !persisted.isEmpty else { return }
+
+        for p in persisted {
+            guard let server = store.servers.first(where: { $0.id == p.serverID }) else { continue }
+            // Create session with the saved tmux name and index
+            let session = Session(server: server, index: p.index)
+            sessions.append(session)
+        }
+
+        // Activate first restored session
+        if let first = sessions.first {
+            activeSessionID = first.id
+        }
+
+        // Auto-connect all restored sessions
+        for session in sessions {
+            session.state = .connecting
+            Task {
+                session.setupDisconnectHandler(
+                    using: store,
+                    autoReconnect: UserDefaults.standard.object(forKey: "autoReconnect") == nil
+                        || UserDefaults.standard.bool(forKey: "autoReconnect")
+                )
+                await session.connect(using: store)
+            }
         }
     }
+
+    // MARK: - Session lifecycle
 
     /// Create a new session for the given server and make it active.
     @discardableResult
@@ -64,7 +93,7 @@ public final class SessionManager {
         nextIndex += 1
         sessions.append(session)
         activeSessionID = session.id
-        saveRecents()
+        persist()
         return session
     }
 
@@ -85,7 +114,6 @@ public final class SessionManager {
 
         sessions.remove(at: idx)
 
-        // If we closed the active session, switch to the nearest remaining
         if activeSessionID == id {
             if sessions.isEmpty {
                 activeSessionID = nil
@@ -95,7 +123,7 @@ public final class SessionManager {
             }
         }
 
-        saveRecents()
+        persist()
     }
 
     /// Close all sessions.
@@ -105,27 +133,22 @@ public final class SessionManager {
         }
         sessions.removeAll()
         activeSessionID = nil
-        saveRecents()
+        persist()
     }
 
-    // MARK: - Persistence (UserDefaults — recent server IDs for quick reconnect)
+    // MARK: - Persistence
 
-    private func saveRecents() {
-        // Save unique server IDs of current + recent sessions (max 5)
-        var ids = sessions.map { $0.server.id }
-        // Append old recents that aren't already in the list
-        for id in recentServerIDs where !ids.contains(id) {
-            ids.append(id)
+    private func persist() {
+        let persisted = sessions.map { session in
+            PersistedSession(
+                serverID: session.server.id,
+                tmuxName: session.tmuxName,
+                index: Int(session.tmuxName.replacingOccurrences(of: "st-", with: "")) ?? 0
+            )
         }
-        let capped = Array(ids.prefix(5))
-        recentServerIDs = capped
-        let strings = capped.map(\.uuidString)
-        UserDefaults.standard.set(strings, forKey: Self.recentsKey)
-    }
-
-    private func loadRecents() {
-        guard let strings = UserDefaults.standard.stringArray(forKey: Self.recentsKey) else { return }
-        recentServerIDs = strings.compactMap { UUID(uuidString: $0) }
+        if let data = try? JSONEncoder().encode(persisted) {
+            UserDefaults.standard.set(data, forKey: Self.storageKey)
+        }
+        UserDefaults.standard.set(nextIndex, forKey: Self.indexKey)
     }
 }
-#endif

@@ -1,4 +1,3 @@
-#if canImport(UIKit)
 import SwiftUI
 
 /// Horizontal tab strip showing all active sessions.
@@ -77,4 +76,3 @@ public struct SessionTabStrip: View {
 extension Notification.Name {
     static let dismissTerminalContainer = Notification.Name("dismissTerminalContainer")
 }
-#endif

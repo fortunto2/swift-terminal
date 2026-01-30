@@ -1,7 +1,7 @@
-#if canImport(UIKit)
 import Foundation
 import SwiftUI
 import SwiftTerm
+import QuartzCore
 
 #if DEBUG
 private func stLog(_ msg: String) {
@@ -161,7 +161,9 @@ public final class Session: Identifiable {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 tv.feed(byteArray: ArraySlice(bytes))
+                #if canImport(UIKit)
                 tv.contentOffset = .zero
+                #endif
                 CATransaction.commit()
             }
         }
@@ -199,7 +201,9 @@ public final class Session: Identifiable {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 tv.feed(byteArray: ArraySlice(bytes))
+                #if canImport(UIKit)
                 tv.contentOffset = .zero
+                #endif
                 CATransaction.commit()
             }
         }
@@ -391,4 +395,3 @@ public final class Session: Identifiable {
         state = .disconnected
     }
 }
-#endif

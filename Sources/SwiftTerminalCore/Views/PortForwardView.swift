@@ -1,4 +1,3 @@
-#if canImport(UIKit)
 import SwiftUI
 
 /// View for managing port forwards for a session.
@@ -90,7 +89,9 @@ public struct PortForwardView: View {
             }
         }
         .navigationTitle("Port Forwards")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Done") { dismiss() }
@@ -142,7 +143,9 @@ struct AddPortForwardView: View {
                     TextField("3000", text: $localPort)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 100)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 }
                 HStack {
                     Text("Remote Host")
@@ -151,7 +154,9 @@ struct AddPortForwardView: View {
                         .multilineTextAlignment(.trailing)
                         .frame(width: 160)
                         .autocorrectionDisabled()
+                        #if os(iOS)
                         .textInputAutocapitalization(.never)
+                        #endif
                 }
                 HStack {
                     Text("Remote Port")
@@ -159,7 +164,9 @@ struct AddPortForwardView: View {
                     TextField("3000", text: $remotePort)
                         .multilineTextAlignment(.trailing)
                         .frame(width: 100)
+                        #if os(iOS)
                         .keyboardType(.numberPad)
+                        #endif
                 }
             }
 
@@ -176,7 +183,9 @@ struct AddPortForwardView: View {
             }
         }
         .navigationTitle("Add Port Forward")
+        #if os(iOS)
         .navigationBarTitleDisplayMode(.inline)
+        #endif
         .toolbar {
             ToolbarItem(placement: .cancellationAction) {
                 Button("Cancel") { dismiss() }
@@ -215,4 +224,3 @@ struct AddPortForwardView: View {
         dismiss()
     }
 }
-#endif

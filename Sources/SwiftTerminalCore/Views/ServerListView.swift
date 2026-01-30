@@ -1,4 +1,3 @@
-#if canImport(UIKit)
 import SwiftUI
 
 /// Main view — shows a list of saved servers with connection actions.
@@ -12,6 +11,7 @@ public struct ServerListView: View {
     @State private var editingServer: Server?
     @State private var showTerminal = false
     @State private var searchText = ""
+    @State private var onboardingSkipped = false
 
     public init() {}
 
@@ -80,11 +80,20 @@ public struct ServerListView: View {
                 ProvisioningView(server: server)
             }
         }
+        #if os(iOS)
         .fullScreenCover(isPresented: $showTerminal) {
             ActiveTerminalContainerView()
         }
+        #else
+        .sheet(isPresented: $showTerminal) {
+            ActiveTerminalContainerView()
+                .frame(minWidth: 600, minHeight: 400)
+        }
+        #endif
         .onAppear {
-            // If sessions exist when returning, show terminal immediately
+            // Restore persisted sessions on first launch
+            sessionManager.restoreSessionsIfNeeded(from: store)
+            // If sessions exist (restored or still running), show terminal
             if !sessionManager.sessions.isEmpty {
                 showTerminal = true
             }
@@ -110,16 +119,27 @@ public struct ServerListView: View {
         }
     }
 
+    @ViewBuilder
     private var emptyState: some View {
-        ContentUnavailableView {
-            Label("No Servers", systemImage: "server.rack")
-        } description: {
-            Text("Add your first server to get started.")
-        } actions: {
-            Button("Add Server") {
-                showingAddServer = true
+        if store.sshKeys.isEmpty && !onboardingSkipped {
+            OnboardingView {
+                onboardingSkipped = true
             }
-            .buttonStyle(.borderedProminent)
+        } else {
+            ContentUnavailableView {
+                Label("No Servers", systemImage: "server.rack")
+            } description: {
+                if !store.sshKeys.isEmpty {
+                    Text("SSH key ready. Add your first server to connect.")
+                } else {
+                    Text("Add your first server to get started.")
+                }
+            } actions: {
+                Button("Add Server") {
+                    showingAddServer = true
+                }
+                .buttonStyle(.borderedProminent)
+            }
         }
     }
 
@@ -164,42 +184,8 @@ public struct ServerListView: View {
                 }
             }
 
-            // Quick Reconnect — recent servers (no active session) after app restart
-            let recentServers = sessionManager.recentServersForReconnect(from: store.servers)
-            if !recentServers.isEmpty && sessionManager.sessions.isEmpty {
-                Section {
-                    ForEach(recentServers) { server in
-                        Button {
-                            sessionManager.createSession(for: server)
-                            showTerminal = true
-                        } label: {
-                            HStack {
-                                Image(systemName: "arrow.clockwise")
-                                    .foregroundStyle(.green)
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(server.name)
-                                        .font(.headline)
-                                    Text(server.connectionString)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                Image(systemName: "chevron.right")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
-                            }
-                        }
-                        .tint(.primary)
-                    }
-                } header: {
-                    Text("Quick Reconnect")
-                } footer: {
-                    Text("Tap to reconnect to a recent server. tmux sessions may still be alive.")
-                }
-            }
-
             // Servers section
-            Section(sessionManager.sessions.isEmpty && recentServers.isEmpty ? "" : "Servers") {
+            Section(sessionManager.sessions.isEmpty ? "" : "Servers") {
                 ForEach(filteredServers) { server in
                     ServerRow(
                         server: server,
@@ -313,15 +299,3 @@ private struct ServerRow: View {
     .environment(ServerStore())
     .environment(SessionManager())
 }
-
-#else
-import SwiftUI
-
-public struct ServerListView: View {
-    public init() {}
-
-    public var body: some View {
-        Text("Server list requires iOS")
-    }
-}
-#endif

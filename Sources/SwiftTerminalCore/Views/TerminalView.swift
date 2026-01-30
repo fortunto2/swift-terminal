@@ -1,6 +1,4 @@
-#if canImport(UIKit)
 import SwiftUI
-import UIKit
 import SwiftTerm
 import os.log
 
@@ -18,7 +16,7 @@ private func tvLog(_ msg: String) {
 @inline(__always) private func tvLog(_ msg: String) {}
 #endif
 
-#if DEBUG
+#if DEBUG && canImport(UIKit)
 struct TerminalDebugInfo {
     var frameWidth: CGFloat = 0
     var frameHeight: CGFloat = 0
@@ -40,9 +38,11 @@ final class TerminalViewRef: @unchecked Sendable {
     weak var terminalView: SwiftTerm.TerminalView?
 }
 
+// MARK: - TerminalView (SwiftUI, cross-platform)
+
 /// SwiftUI wrapper around SwiftTerm's TerminalView for interactive SSH sessions.
 /// Operates on a `Session` — uses session.sshService, session.state, and
-/// caches the SwiftTerm UIView in session.terminalView for tab-switch reuse.
+/// caches the SwiftTerm view in session.terminalView for tab-switch reuse.
 public struct TerminalView: View {
     let session: Session
 
@@ -50,9 +50,11 @@ public struct TerminalView: View {
     @AppStorage("autoReconnect") private var autoReconnect = true
     @State private var showPasswordPrompt = false
     @State private var passwordInput = ""
-    @State private var isKeyboardVisible = false
     @State private var terminalViewRef = TerminalViewRef()
-    #if DEBUG
+    #if canImport(UIKit)
+    @State private var isKeyboardVisible = false
+    #endif
+    #if DEBUG && canImport(UIKit)
     @State private var showDebugOverlay = false
     @State private var debugInfo = TerminalDebugInfo()
     @State private var debugTimer: Timer?
@@ -69,6 +71,7 @@ public struct TerminalView: View {
                 ZStack(alignment: .top) {
                     GeometryReader { geo in
                         if geo.size.width > 0 && geo.size.height > 0 {
+                            #if canImport(UIKit)
                             TerminalViewRepresentable(
                                 session: session,
                                 containerSize: geo.size,
@@ -77,9 +80,18 @@ public struct TerminalView: View {
                             )
                             .frame(width: geo.size.width, height: geo.size.height)
                             .clipped()
+                            #else
+                            MacTerminalViewRepresentable(
+                                session: session,
+                                containerSize: geo.size,
+                                terminalViewRef: terminalViewRef
+                            )
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                            #endif
                         }
                     }
-                    #if DEBUG
+                    #if DEBUG && canImport(UIKit)
                     if showDebugOverlay {
                         terminalDebugOverlayView
                     }
@@ -92,6 +104,7 @@ public struct TerminalView: View {
             }
         }
         .toolbar {
+            #if canImport(UIKit)
             if session.state.isConnected {
                 ToolbarItem(placement: .bottomBar) {
                     Button {
@@ -106,6 +119,7 @@ public struct TerminalView: View {
                     }
                 }
             }
+            #endif
             ToolbarItem(placement: .primaryAction) {
                 Menu {
                     if session.state.isConnected {
@@ -120,7 +134,7 @@ public struct TerminalView: View {
                     } label: {
                         Label("Reconnect", systemImage: "arrow.clockwise")
                     }
-                    #if DEBUG
+                    #if DEBUG && canImport(UIKit)
                     Divider()
                     Button {
                         showDebugOverlay.toggle()
@@ -136,8 +150,10 @@ public struct TerminalView: View {
                 }
             }
         }
+        #if canImport(UIKit)
         .toolbarBackground(.black, for: .bottomBar)
         .toolbarColorScheme(.dark, for: .bottomBar)
+        #endif
         .alert("Enter Password", isPresented: $showPasswordPrompt) {
             SecureField("Password", text: $passwordInput)
             Button("Connect") {
@@ -159,12 +175,12 @@ public struct TerminalView: View {
             }
         }
         .onDisappear {
-            #if DEBUG
+            #if DEBUG && canImport(UIKit)
             debugTimer?.invalidate()
             debugTimer = nil
             #endif
         }
-        #if DEBUG
+        #if DEBUG && canImport(UIKit)
         .onChange(of: showDebugOverlay) { _, show in
             if show {
                 startDebugTimer()
@@ -176,9 +192,9 @@ public struct TerminalView: View {
         #endif
     }
 
-    // MARK: - Debug Overlay
+    // MARK: - Debug Overlay (iOS only)
 
-    #if DEBUG
+    #if DEBUG && canImport(UIKit)
     private var terminalDebugOverlayView: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(verbatim: "frame: \(Int(debugInfo.frameWidth))x\(Int(debugInfo.frameHeight))  content: \(Int(debugInfo.contentWidth))x\(Int(debugInfo.contentHeight))  offset: (\(Int(debugInfo.offsetX)), \(Int(debugInfo.offsetY)))")
@@ -286,7 +302,16 @@ public struct TerminalView: View {
     }
 }
 
-// MARK: - UIViewRepresentable for SwiftTerm
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let toggleTerminalKeyboard = Notification.Name("toggleTerminalKeyboard")
+}
+
+// MARK: - iOS UIViewRepresentable
+
+#if canImport(UIKit)
+import UIKit
 
 public struct TerminalViewRepresentable: UIViewRepresentable {
     let session: Session
@@ -477,25 +502,121 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         public func iTermContent(source: SwiftTerm.TerminalView, content: ArraySlice<UInt8>) {}
     }
 }
+#endif
 
-extension Notification.Name {
-    static let toggleTerminalKeyboard = Notification.Name("toggleTerminalKeyboard")
+// MARK: - macOS NSViewRepresentable
+
+#if os(macOS)
+import AppKit
+
+public struct MacTerminalViewRepresentable: NSViewRepresentable {
+    let session: Session
+    var containerSize: CGSize
+    let terminalViewRef: TerminalViewRef
+
+    public func makeCoordinator() -> Coordinator {
+        Coordinator(session: session)
+    }
+
+    public func makeNSView(context: Context) -> SwiftTerm.TerminalView {
+        // View reuse: if session already has a terminal view, return it
+        if let existing = session.terminalView {
+            tvLog("REUSE terminalView for \(session.tmuxName)")
+            terminalViewRef.terminalView = existing
+            context.coordinator.terminalView = existing
+            existing.terminalDelegate = context.coordinator
+            existing.frame = CGRect(origin: .zero, size: containerSize)
+            DispatchQueue.main.async {
+                existing.window?.makeFirstResponder(existing)
+            }
+            return existing
+        }
+
+        tvLog("CREATE terminalView for \(session.tmuxName)")
+
+        let frame = CGRect(origin: .zero, size: containerSize)
+        let terminalView = SwiftTerm.TerminalView(frame: frame)
+
+        let fontSize: CGFloat = 14
+        terminalView.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
+        terminalView.nativeBackgroundColor = .black
+        terminalView.nativeForegroundColor = .init(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
+
+        terminalView.terminalDelegate = context.coordinator
+        context.coordinator.terminalView = terminalView
+        terminalViewRef.terminalView = terminalView
+
+        // Cache in session for reuse across tab switches
+        session.terminalView = terminalView
+
+        // Start shell + wire output (via session helper)
+        if !session.shellStarted {
+            session.startShellIfNeeded()
+        }
+
+        // Start auto-start port forwards
+        session.startAutoForwards()
+
+        // Make terminal first responder
+        DispatchQueue.main.async {
+            terminalView.window?.makeFirstResponder(terminalView)
+        }
+
+        return terminalView
+    }
+
+    public func updateNSView(_ nsView: SwiftTerm.TerminalView, context: Context) {
+        let newSize = containerSize
+        if abs(nsView.frame.size.height - newSize.height) > 1
+            || abs(nsView.frame.size.width - newSize.width) > 1 {
+            nsView.frame = CGRect(origin: .zero, size: newSize)
+            nsView.needsLayout = true
+        }
+    }
+
+    public static func dismantleNSView(_ nsView: SwiftTerm.TerminalView, coordinator: Coordinator) {
+        // Don't destroy — cached in session.terminalView for reuse
+    }
+
+    // MARK: - Coordinator (TerminalViewDelegate)
+
+    public class Coordinator: NSObject, SwiftTerm.TerminalViewDelegate {
+        let session: Session
+        weak var terminalView: SwiftTerm.TerminalView?
+
+        init(session: Session) {
+            self.session = session
+        }
+
+        public func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
+            tvLog("send \(data.count) bytes")
+            session.sshService.shellWriter.write(Data(data))
+        }
+
+        public func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
+            tvLog("sizeChanged \(newCols)x\(newRows)")
+            session.sshService.shellWriter.resize(cols: newCols, rows: newRows)
+        }
+
+        public func setTerminalTitle(source: SwiftTerm.TerminalView, title: String) {}
+        public func setTerminalIconTitle(source: SwiftTerm.TerminalView, title: String) {}
+        public func scrolled(source: SwiftTerm.TerminalView, position: Double) {}
+        public func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {}
+        public func requestOpenLink(source: SwiftTerm.TerminalView, link: String, params: [String: String]) {}
+        public func rangeChanged(source: SwiftTerm.TerminalView, startY: Int, endY: Int) {}
+        public func clipboardCopy(source: SwiftTerm.TerminalView, content: Data) {
+            if let str = String(data: content, encoding: .utf8) {
+                NSPasteboard.general.clearContents()
+                NSPasteboard.general.setString(str, forType: .string)
+            }
+        }
+        public func iTermContent(source: SwiftTerm.TerminalView, content: ArraySlice<UInt8>) {}
+    }
 }
+#endif
 
 #Preview {
     NavigationStack {
         Text("Terminal preview requires running session")
     }
 }
-
-#else
-import SwiftUI
-
-public struct TerminalView: View {
-    let session: Any  // placeholder for non-UIKit
-
-    public var body: some View {
-        Text("Terminal view requires iOS")
-    }
-}
-#endif

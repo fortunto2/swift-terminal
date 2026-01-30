@@ -1,5 +1,5 @@
 {
-  "originHash" : "5f26e94902665fcd2d608206dcc3e8ffcab5ac9729641385145b66633bf1042d",
+  "originHash" : "c8630de1716b5c88a1040d9e33fe2185acc6152a9fcec5986f67669eb2e457e9",
   "pins" : [
     {
       "identity" : "bigint",
@@ -103,10 +103,10 @@
     {
       "identity" : "swiftterm",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/migueldeicaza/SwiftTerm.git",
+      "location" : "https://github.com/fortunto2/SwiftTerm.git",
       "state" : {
-        "revision" : "0b8d99bd19b694df44e1ccaa3891309719d34330",
-        "version" : "1.5.1"
+        "branch" : "stable-1.5.1-sync-output",
+        "revision" : "8e418e17cebc8c39a5c7ff6b093be42cedd88f52"
       }
     }
   ],
