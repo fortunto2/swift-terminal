@@ -2,6 +2,37 @@
 import SwiftUI
 import UIKit
 import SwiftTerm
+import os.log
+
+private let scrollLog = Logger(subsystem: "co.superduperai.swift-terminal", category: "scroll")
+
+#if DEBUG
+private func scrollPrint(_ msg: String) {
+    print("[scroll] \(msg)")
+}
+#endif
+
+#if DEBUG
+struct TerminalDebugInfo {
+    var frameWidth: CGFloat = 0
+    var frameHeight: CGFloat = 0
+    var contentWidth: CGFloat = 0
+    var contentHeight: CGFloat = 0
+    var offsetX: CGFloat = 0
+    var offsetY: CGFloat = 0
+    var rows: Int = 0
+    var cols: Int = 0
+    var isAltBuffer: Bool = false
+    var yDisp: Int = 0
+    var isScrollEnabled: Bool = true
+}
+#endif
+
+/// Holds a weak reference to the SwiftTerm.TerminalView so the SwiftUI
+/// parent can read metrics for the debug overlay.
+final class TerminalViewRef: @unchecked Sendable {
+    weak var terminalView: SwiftTerm.TerminalView?
+}
 
 /// SwiftUI wrapper around SwiftTerm's TerminalView for interactive SSH sessions.
 public struct TerminalView: View {
@@ -17,6 +48,12 @@ public struct TerminalView: View {
     @State private var isKeyboardVisible = false
     @State private var reconnectAttempt = 0
     @State private var reconnectTask: Task<Void, Never>?
+    @State private var terminalViewRef = TerminalViewRef()
+    #if DEBUG
+    @State private var showDebugOverlay = false
+    @State private var debugInfo = TerminalDebugInfo()
+    @State private var debugTimer: Timer?
+    #endif
 
     enum ConnectionState {
         case disconnected
@@ -39,16 +76,24 @@ public struct TerminalView: View {
             case .disconnected, .connecting:
                 connectingOverlay
             case .connected:
-                GeometryReader { geo in
-                    if geo.size.width > 0 && geo.size.height > 0 {
-                        TerminalViewRepresentable(
-                            sshService: sshService,
-                            containerSize: geo.size,
-                            isKeyboardVisible: $isKeyboardVisible
-                        )
-                        .frame(width: geo.size.width, height: geo.size.height)
-                        .clipped()
+                ZStack(alignment: .top) {
+                    GeometryReader { geo in
+                        if geo.size.width > 0 && geo.size.height > 0 {
+                            TerminalViewRepresentable(
+                                sshService: sshService,
+                                containerSize: geo.size,
+                                isKeyboardVisible: $isKeyboardVisible,
+                                terminalViewRef: terminalViewRef
+                            )
+                            .frame(width: geo.size.width, height: geo.size.height)
+                            .clipped()
+                        }
                     }
+                    #if DEBUG
+                    if showDebugOverlay {
+                        terminalDebugOverlayView
+                    }
+                    #endif
                 }
             case .reconnecting(let attempt):
                 reconnectingOverlay(attempt: attempt)
@@ -89,6 +134,17 @@ public struct TerminalView: View {
                     } label: {
                         Label("Reconnect", systemImage: "arrow.clockwise")
                     }
+                    #if DEBUG
+                    Divider()
+                    Button {
+                        showDebugOverlay.toggle()
+                    } label: {
+                        Label(
+                            showDebugOverlay ? "Hide Debug Info" : "Show Debug Info",
+                            systemImage: showDebugOverlay ? "eye.slash" : "ladybug"
+                        )
+                    }
+                    #endif
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -125,8 +181,65 @@ public struct TerminalView: View {
         .onDisappear {
             reconnectTask?.cancel()
             reconnectTask = nil
+            #if DEBUG
+            debugTimer?.invalidate()
+            debugTimer = nil
+            #endif
+        }
+        #if DEBUG
+        .onChange(of: showDebugOverlay) { _, show in
+            if show {
+                startDebugTimer()
+            } else {
+                debugTimer?.invalidate()
+                debugTimer = nil
+            }
+        }
+        #endif
+    }
+
+    // MARK: - Debug Overlay
+
+    #if DEBUG
+    private var terminalDebugOverlayView: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(verbatim: "frame: \(Int(debugInfo.frameWidth))×\(Int(debugInfo.frameHeight))  content: \(Int(debugInfo.contentWidth))×\(Int(debugInfo.contentHeight))  offset: (\(Int(debugInfo.offsetX)), \(Int(debugInfo.offsetY)))")
+            Text(verbatim: "rows: \(debugInfo.rows)  cols: \(debugInfo.cols)  altBuf: \(debugInfo.isAltBuffer)  yDisp: \(debugInfo.yDisp)  canScroll: \(debugInfo.isScrollEnabled)")
+        }
+        .font(.system(size: 9, weight: .medium, design: .monospaced))
+        .foregroundStyle(.green)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 4)
+        .background(.black.opacity(0.75))
+        .cornerRadius(4)
+        .padding(.top, 2)
+        .allowsHitTesting(false)
+    }
+
+    private func startDebugTimer() {
+        debugTimer?.invalidate()
+        let ref = terminalViewRef
+        debugTimer = Timer.scheduledTimer(withTimeInterval: 0.3, repeats: true) { _ in
+            Task { @MainActor in
+                guard let tv = ref.terminalView else { return }
+                let terminal = tv.getTerminal()
+                debugInfo = TerminalDebugInfo(
+                    frameWidth: tv.frame.width,
+                    frameHeight: tv.frame.height,
+                    contentWidth: tv.contentSize.width,
+                    contentHeight: tv.contentSize.height,
+                    offsetX: tv.contentOffset.x,
+                    offsetY: tv.contentOffset.y,
+                    rows: terminal.rows,
+                    cols: terminal.cols,
+                    isAltBuffer: terminal.isCurrentBufferAlternate,
+                    yDisp: 0,
+                    isScrollEnabled: tv.isScrollEnabled
+                )
+            }
         }
     }
+    #endif
 
     // MARK: - Overlays
 
@@ -307,6 +420,7 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
     let sshService: SSHService
     var containerSize: CGSize
     @Binding var isKeyboardVisible: Bool
+    let terminalViewRef: TerminalViewRef
 
     public func makeCoordinator() -> Coordinator {
         Coordinator(sshService: sshService, isKeyboardVisible: $isKeyboardVisible)
@@ -325,6 +439,7 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         // Set delegate to capture keyboard input
         terminalView.terminalDelegate = context.coordinator
         context.coordinator.terminalView = terminalView
+        terminalViewRef.terminalView = terminalView
 
         // Replace default accessory with Claude Code keyboard bar
         let accessory = ClaudeCodeAccessoryView(terminalView: terminalView)
@@ -334,10 +449,33 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         let cols = terminalView.getTerminal().cols
         let rows = terminalView.getTerminal().rows
 
+        // Prevent iOS from adding safe-area content insets that shift the
+        // terminal content (SwiftUI already accounts for safe areas).
+        terminalView.contentInsetAdjustmentBehavior = .never
+        terminalView.contentInset = .zero
+        terminalView.scrollIndicatorInsets = .zero
+
+        // Disable bounce to prevent overscroll in TUI apps (Claude Code).
+        terminalView.bounces = false
+        terminalView.alwaysBounceVertical = false
+        terminalView.showsVerticalScrollIndicator = false
+        // Disable touch/gesture scrolling — prevents user from accidentally
+        // scrolling into empty scrollback area (black screen).  Programmatic
+        // contentOffset changes (SwiftTerm's internal scrollTo) still work.
+        terminalView.isScrollEnabled = false
+
         sshService.onOutput = { [weak terminalView] data in
             let bytes = Array(data)
             DispatchQueue.main.async {
-                terminalView?.feed(byteArray: ArraySlice(bytes))
+                guard let tv = terminalView else { return }
+                // Wrap feed + offset reset in a CATransaction so no
+                // intermediate frame renders at the wrong offset
+                // (prevents flicker from SwiftTerm's internal scrollTo).
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                tv.feed(byteArray: ArraySlice(bytes))
+                tv.contentOffset = .zero
+                CATransaction.commit()
             }
         }
 

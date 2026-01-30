@@ -24,6 +24,9 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
     private var controlButton: UIButton?
     private var keyboardButton: UIButton?
 
+    /// Overlay for voice dictation input (bypasses SwiftTerm's UITextInput backspace issue).
+    private var dictationOverlay: DictationOverlayView?
+
     /// All managed subviews (for teardown on rebuild).
     private var allViews: [UIView] = []
     private var leftViews: [UIView] = []
@@ -81,19 +84,21 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
 
         let useSmall = frame.width < 380
 
-        // --- Left group: Esc, Ctrl, Tab ---
+        // --- Left group: Esc, Ctrl, Tab, Plan (Shift+Tab) ---
         if useSmall {
             leftViews.append(makeButton("", #selector(escAction), icon: "escape", isDark: true))
             let ctrl = makeButton("", #selector(ctrlAction), icon: "control", isDark: true)
             leftViews.append(ctrl)
             controlButton = ctrl
             leftViews.append(makeButton("", #selector(tabAction), icon: "arrow.right.to.line.compact", isDark: true))
+            leftViews.append(makeButton("Plan", #selector(shiftTabAction), isDark: true))
         } else {
             leftViews.append(makeButton("Esc", #selector(escAction), isDark: true))
             let ctrl = makeButton("Ctrl", #selector(ctrlAction), isDark: true)
             leftViews.append(ctrl)
             controlButton = ctrl
             leftViews.append(makeButton("", #selector(tabAction), icon: "arrow.right.to.line.compact", isDark: true))
+            leftViews.append(makeButton("Plan", #selector(shiftTabAction), isDark: true))
         }
 
         // --- Right group: ← ↑ ↓ → ⌨ claude ---
@@ -101,6 +106,8 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         rightViews.append(makeAutoRepeatButton("arrow.up", #selector(upAction)))
         rightViews.append(makeAutoRepeatButton("arrow.down", #selector(downAction)))
         rightViews.append(makeAutoRepeatButton("arrow.right", #selector(rightAction)))
+
+        rightViews.append(makeButton("", #selector(micAction), icon: "mic.fill", isDark: true))
 
         keyboardButton = makeButton("", #selector(toggleKeyboardAction),
                                     icon: "keyboard.chevron.compact.down", isDark: true)
@@ -133,11 +140,8 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         rightViews.forEach { sizeView($0, important: true) }
         let fixedSpace = (leftViews + rightViews).reduce(0.0) { $0 + $1.frame.width + buttonPad }
 
-        // --- Float group: ~ | / - F1..F10 ---
-        floatViews.append(makeButton("~", #selector(tildeAction)))
-        floatViews.append(makeButton("|", #selector(pipeAction)))
+        // --- Float group: / menu, then F1..F10 ---
         floatViews.append(makeSlashMenuButton())
-        floatViews.append(makeButton("-", #selector(dashAction)))
 
         floatViews.forEach { sizeView($0, important: true) }
         let floatFixedSpace = floatViews.reduce(fixedSpace) { $0 + $1.frame.width + buttonPad }
@@ -164,7 +168,7 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         }
 
         // Size the F-key (non-important) float views
-        let fKeyStart = 4 // first 4 are ~, |, /, -
+        let fKeyStart = 1 // first 1 is / menu
         for i in fKeyStart..<floatViews.count {
             sizeView(floatViews[i], important: false)
         }
@@ -246,46 +250,83 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
 
     /// "/" button with a dropdown menu of Claude slash commands.
     private func makeSlashMenuButton() -> UIButton {
-        let commands: [(String, String)] = [
-            ("/exit", "/exit"),
-            ("/compact", "/compact"),
-            ("/clear", "/clear"),
-            ("/help", "/help"),
-            ("/status", "/status"),
-            ("/review", "/review"),
-            ("/cost", "/cost"),
-            ("/config", "/config"),
+        let sessionCmds: [(String, String, String)] = [
+            ("/help", "/help", "questionmark.circle"),
+            ("/compact", "/compact", "arrow.down.right.and.arrow.up.left"),
+            ("/clear", "/clear", "trash"),
+            ("/cost", "/cost", "dollarsign.circle"),
+            ("/model", "/model", "cpu"),
+            ("/config", "/config", "gear"),
+            ("/doctor", "/doctor", "stethoscope"),
+        ]
+        let exitCmds: [(String, String, String)] = [
+            ("/exit", "/exit", "xmark.circle"),
         ]
 
-        let menuItems = commands.map { (label, cmd) in
-            UIAction(title: label, image: UIImage(systemName: "chevron.right")) { [weak self] _ in
+        let sessionItems = sessionCmds.map { (label, cmd, icon) in
+            UIAction(title: label, image: UIImage(systemName: icon)) { [weak self] _ in
+                self?.clickAndSendText(cmd)
+            }
+        }
+        let exitItems = exitCmds.map { (label, cmd, icon) in
+            UIAction(title: label, image: UIImage(systemName: icon), attributes: .destructive) { [weak self] _ in
                 self?.clickAndSendText(cmd)
             }
         }
 
+        let menu = UIMenu(title: "Slash Commands", children: [
+            UIMenu(title: "", options: .displayInline, children: sessionItems),
+            UIMenu(title: "", options: .displayInline, children: exitItems),
+        ])
+
         let b = makeButton("/", #selector(noop))
         b.titleLabel?.font = UIFont.monospacedSystemFont(ofSize: 15, weight: .bold)
-        b.menu = UIMenu(title: "Claude Commands", children: menuItems)
+        b.menu = menu
         b.showsMenuAsPrimaryAction = true
-        // Remove touchDown target since menu handles interaction
         b.removeTarget(self, action: #selector(noop), for: .touchDown)
         return b
     }
 
     /// "claude" button with a dropdown menu for launching Claude.
     private func makeClaudeMenuButton() -> UIButton {
-        let options: [(String, String)] = [
-            ("claude", "claude"),
-            ("claude --skip-permissions", "claude --dangerously-skip-permissions"),
-            ("claude --continue", "claude --continue"),
-            ("claude --resume", "claude --resume"),
+        let launchCmds: [(String, String, String)] = [
+            ("claude", "claude", "brain"),
+            ("claude -c (continue)", "claude -c", "arrow.uturn.forward"),
+            ("claude -r (resume)", "claude -r", "clock.arrow.circlepath"),
+            ("claude -p (print)", "claude -p \"\"", "text.alignleft"),
+        ]
+        let dangerousCmds: [(String, String, String)] = [
+            ("--dangerously-skip-permissions", "claude --dangerously-skip-permissions", "exclamationmark.shield"),
+        ]
+        let thinkCmds: [(String, String, String)] = [
+            ("think:", "think: ", "lightbulb"),
+            ("think hard:", "think hard: ", "lightbulb.max"),
+            ("ultrathink:", "ultrathink: ", "bolt"),
         ]
 
-        let menuItems = options.map { (label, cmd) in
-            UIAction(title: label, image: UIImage(systemName: "brain")) { [weak self] _ in
+        let launchItems = launchCmds.map { (label, cmd, icon) in
+            UIAction(title: label, image: UIImage(systemName: icon)) { [weak self] _ in
                 self?.clickAndSendText(cmd)
             }
         }
+        let dangerousItems = dangerousCmds.map { (label, cmd, icon) in
+            UIAction(title: label, image: UIImage(systemName: icon), attributes: .destructive) { [weak self] _ in
+                self?.clickAndSendText(cmd)
+            }
+        }
+        let thinkItems = thinkCmds.map { (label, cmd, icon) in
+            UIAction(title: label, image: UIImage(systemName: icon)) { [weak self] _ in
+                // Think prefixes don't need newline — user types after them
+                UIDevice.current.playInputClick()
+                self?.terminalView?.send(Array(cmd.utf8))
+            }
+        }
+
+        let menu = UIMenu(title: "Claude Code", children: [
+            UIMenu(title: "", options: .displayInline, children: launchItems),
+            UIMenu(title: "Skip Permissions", options: .displayInline, children: dangerousItems),
+            UIMenu(title: "Think Modes", options: .displayInline, children: thinkItems),
+        ])
 
         let b = makeButton("claude", #selector(noop), isDark: true)
         if let hb = b as? HighlightButton {
@@ -293,7 +334,7 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         }
         b.backgroundColor = .systemPurple
         b.titleLabel?.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .medium)
-        b.menu = UIMenu(title: "Launch Claude", children: menuItems)
+        b.menu = menu
         b.showsMenuAsPrimaryAction = true
         b.removeTarget(self, action: #selector(noop), for: .touchDown)
         return b
@@ -322,9 +363,7 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
 
     @objc private func escAction() { clickAndSend([0x1B]) }
     @objc private func tabAction() { clickAndSend([0x09]) }
-    @objc private func tildeAction() { clickAndSend([UInt8(ascii: "~")]) }
-    @objc private func pipeAction() { clickAndSend([UInt8(ascii: "|")]) }
-    @objc private func dashAction() { clickAndSend([UInt8(ascii: "-")]) }
+    @objc private func shiftTabAction() { clickAndSend([0x1B, 0x5B, 0x5A]) }
 
     @objc private func f1Action()  { clickAndSend(EscapeSequences.cmdF[0]) }
     @objc private func f2Action()  { clickAndSend(EscapeSequences.cmdF[1]) }
@@ -395,6 +434,49 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         repeatTask = nil
     }
 
+    // MARK: - Dictation (voice input workaround)
+
+    @objc private func micAction() {
+        UIDevice.current.playInputClick()
+        guard let tv = terminalView, let window = tv.window else { return }
+
+        // Dismiss if already showing
+        if let existing = dictationOverlay {
+            existing.removeFromSuperview()
+            dictationOverlay = nil
+            return
+        }
+
+        let overlay = DictationOverlayView { [weak self] text in
+            // Send dictated text directly to terminal, bypassing UITextInput replace/backspace
+            self?.terminalView?.send(Array(text.utf8))
+            self?.dictationOverlay?.removeFromSuperview()
+            self?.dictationOverlay = nil
+            // Refocus terminal
+            _ = self?.terminalView?.becomeFirstResponder()
+        } onCancel: { [weak self] in
+            self?.dictationOverlay?.removeFromSuperview()
+            self?.dictationOverlay = nil
+            _ = self?.terminalView?.becomeFirstResponder()
+        }
+
+        overlay.translatesAutoresizingMaskIntoConstraints = false
+        window.addSubview(overlay)
+        NSLayoutConstraint.activate([
+            overlay.leadingAnchor.constraint(equalTo: window.leadingAnchor),
+            overlay.trailingAnchor.constraint(equalTo: window.trailingAnchor),
+            overlay.bottomAnchor.constraint(equalTo: window.bottomAnchor),
+            overlay.heightAnchor.constraint(equalToConstant: 120),
+        ])
+        dictationOverlay = overlay
+
+        // Resign terminal, focus text field
+        _ = tv.resignFirstResponder()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            overlay.focusTextField()
+        }
+    }
+
     // MARK: - Keyboard Toggle
 
     @objc private func toggleKeyboardAction() {
@@ -427,6 +509,104 @@ private final class HighlightButton: UIButton {
         didSet {
             backgroundColor = isSelected ? UIView().tintColor : normalColor
         }
+    }
+}
+
+// MARK: - Dictation Overlay
+
+/// Small overlay with a text field for voice dictation.
+/// Captures dictated text in a standard UITextField (which handles dictation correctly),
+/// then sends the result as a single string to the terminal — no intermediate backspaces.
+private final class DictationOverlayView: UIView, UITextFieldDelegate {
+    private let textField = UITextField()
+    private let sendButton = UIButton(type: .system)
+    private let cancelButton = UIButton(type: .system)
+    private let onSend: (String) -> Void
+    private let onCancel: () -> Void
+
+    init(onSend: @escaping (String) -> Void, onCancel: @escaping () -> Void) {
+        self.onSend = onSend
+        self.onCancel = onCancel
+        super.init(frame: .zero)
+        setupUI()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) { fatalError() }
+
+    private func setupUI() {
+        backgroundColor = UIColor(white: 0.15, alpha: 0.98)
+        layer.cornerRadius = 16
+        layer.maskedCorners = [.layerMinXMinYCorner, .layerMaxXMinYCorner]
+        layer.masksToBounds = true
+
+        // Label
+        let label = UILabel()
+        label.text = "Voice Input"
+        label.font = .systemFont(ofSize: 13, weight: .medium)
+        label.textColor = .secondaryLabel
+
+        // Text field
+        textField.borderStyle = .roundedRect
+        textField.backgroundColor = UIColor(white: 0.25, alpha: 1)
+        textField.textColor = .white
+        textField.font = .monospacedSystemFont(ofSize: 15, weight: .regular)
+        textField.attributedPlaceholder = NSAttributedString(
+            string: "Tap mic on keyboard to dictate...",
+            attributes: [.foregroundColor: UIColor.gray]
+        )
+        textField.returnKeyType = .send
+        textField.autocorrectionType = .no
+        textField.autocapitalizationType = .none
+        textField.delegate = self
+
+        // Send button
+        sendButton.setTitle("Send", for: .normal)
+        sendButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .semibold)
+        sendButton.addAction(UIAction { [weak self] _ in
+            self?.sendText()
+        }, for: .touchUpInside)
+
+        // Cancel button
+        cancelButton.setTitle("Cancel", for: .normal)
+        cancelButton.tintColor = .systemGray
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 15, weight: .regular)
+        cancelButton.addAction(UIAction { [weak self] _ in
+            self?.onCancel()
+        }, for: .touchUpInside)
+
+        let buttonStack = UIStackView(arrangedSubviews: [cancelButton, UIView(), sendButton])
+        buttonStack.axis = .horizontal
+
+        let stack = UIStackView(arrangedSubviews: [label, textField, buttonStack])
+        stack.axis = .vertical
+        stack.spacing = 8
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        addSubview(stack)
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: topAnchor, constant: 12),
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 16),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            stack.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -12),
+        ])
+    }
+
+    func focusTextField() {
+        textField.becomeFirstResponder()
+    }
+
+    private func sendText() {
+        let text = textField.text ?? ""
+        guard !text.isEmpty else { return }
+        onSend(text)
+    }
+
+    // MARK: - UITextFieldDelegate
+
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        sendText()
+        return false
     }
 }
 #endif

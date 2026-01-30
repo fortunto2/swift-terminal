@@ -6,12 +6,17 @@ public struct LockScreenView: View {
     @State private var isUnlocked = false
     @State private var authError: String?
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage("requireLockScreen") private var requireLockScreen = true
 
     public init() {}
 
+    private var shouldLock: Bool {
+        return requireLockScreen
+    }
+
     public var body: some View {
         Group {
-            if isUnlocked {
+            if isUnlocked || !shouldLock {
                 NavigationStack {
                     ServerListView()
                 }
@@ -20,7 +25,7 @@ public struct LockScreenView: View {
             }
         }
         .onChange(of: scenePhase) { _, newPhase in
-            if newPhase == .background {
+            if newPhase == .background && shouldLock {
                 isUnlocked = false
             }
         }

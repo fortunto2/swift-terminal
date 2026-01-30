@@ -9,7 +9,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/orlandos-nl/Citadel.git", from: "0.12.0"),
-        .package(url: "https://github.com/migueldeicaza/SwiftTerm.git", from: "1.2.0"),
+        .package(url: "https://github.com/fortunto2/SwiftTerm.git", branch: "stable-1.5.1-sync-output"),
     ],
     targets: [
         // Core library — all models, services, views

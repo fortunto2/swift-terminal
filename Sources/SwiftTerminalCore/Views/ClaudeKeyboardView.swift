@@ -117,9 +117,9 @@ public final class ClaudeKeyboardView: UIView {
                 KeyDef("/comp", isDark: true)  { $0.sendText("/compact") },
                 KeyDef("/clr", isDark: true)   { $0.sendText("/clear") },
                 KeyDef("/help", isDark: true)  { $0.sendText("/help") },
-                KeyDef("/stat", isDark: true)  { $0.sendText("/status") },
-                KeyDef("/rev", isDark: true)   { $0.sendText("/review") },
                 KeyDef("/cost", isDark: true)  { $0.sendText("/cost") },
+                KeyDef("/model", isDark: true) { $0.sendText("/model") },
+                KeyDef("/doc", isDark: true)   { $0.sendText("/doctor") },
                 KeyDef("/cfg", isDark: true)   { $0.sendText("/config") },
             ],
         ]

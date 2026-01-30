@@ -8,6 +8,7 @@ public struct SettingsView: View {
     @AppStorage("defaultUsername") private var defaultUsername = "root"
     @AppStorage("terminalFontSize") private var terminalFontSize = 14.0
     @AppStorage("requireBiometrics") private var requireBiometrics = true
+    @AppStorage("requireLockScreen") private var requireLockScreen = true
     @AppStorage("autoReconnect") private var autoReconnect = true
 
     public var body: some View {
@@ -44,11 +45,12 @@ public struct SettingsView: View {
             }
 
             Section {
+                Toggle("Lock Screen on Launch", isOn: $requireLockScreen)
                 Toggle("Require Biometrics for Keys", isOn: $requireBiometrics)
             } header: {
                 Text("Security")
             } footer: {
-                Text("When enabled, Face ID or Touch ID is required to use SSH private keys.")
+                Text("Lock Screen requires Face ID / Touch ID when opening the app. Biometrics for Keys protects SSH private key access.")
             }
 
             Section("About") {
@@ -86,6 +88,7 @@ public struct SettingsView: View {
         defaultUsername = "root"
         terminalFontSize = 14.0
         requireBiometrics = true
+        requireLockScreen = true
         autoReconnect = true
     }
 }

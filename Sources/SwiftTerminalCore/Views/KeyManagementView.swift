@@ -71,29 +71,40 @@ public struct KeyManagementView: View {
         @Bindable var store = store
         List {
             ForEach(store.sshKeys) { key in
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Image(systemName: "key.fill")
-                            .foregroundStyle(.orange)
-                        Text(key.name)
-                            .font(.headline)
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Image(systemName: "key.fill")
+                                .foregroundStyle(.orange)
+                            Text(key.name)
+                                .font(.headline)
+                        }
+                        Text(key.keyType.displayName)
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        Text(key.publicKey.prefix(50) + "...")
+                            .font(.system(.caption2, design: .monospaced))
+                            .foregroundStyle(.tertiary)
+                            .lineLimit(1)
+                        Text("Created \(key.createdAt, format: .dateTime.month().day().year())")
+                            .font(.caption2)
+                            .foregroundStyle(.tertiary)
                     }
-                    Text(key.keyType.displayName)
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                    Text(key.publicKey.prefix(50) + "...")
-                        .font(.system(.caption2, design: .monospaced))
-                        .foregroundStyle(.tertiary)
-                        .lineLimit(1)
-                    Text("Created \(key.createdAt, format: .dateTime.month().day().year())")
-                        .font(.caption2)
-                        .foregroundStyle(.tertiary)
+                    Spacer()
+                    ShareLink(item: key.publicKey) {
+                        Image(systemName: "square.and.arrow.up")
+                            .foregroundStyle(.blue)
+                    }
+                    .buttonStyle(.borderless)
                 }
                 .contextMenu {
                     Button {
                         copyPublicKey(key)
                     } label: {
                         Label("Copy Public Key", systemImage: "doc.on.doc")
+                    }
+                    ShareLink(item: key.publicKey) {
+                        Label("Share Public Key", systemImage: "square.and.arrow.up")
                     }
                 }
             }

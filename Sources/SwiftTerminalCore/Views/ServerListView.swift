@@ -7,6 +7,7 @@ public struct ServerListView: View {
     @State private var showingSettings = false
     @State private var showingKeyManagement = false
     @State private var provisioningServer: Server?
+    @State private var editingServer: Server?
     @State private var selectedServer: Server?
     @State private var searchText = ""
 
@@ -67,6 +68,11 @@ public struct ServerListView: View {
                 SettingsView()
             }
         }
+        .sheet(item: $editingServer) { server in
+            NavigationStack {
+                AddServerView(existingServer: server)
+            }
+        }
         .sheet(item: $provisioningServer) { server in
             NavigationStack {
                 ProvisioningView(server: server)
@@ -125,11 +131,31 @@ public struct ServerListView: View {
                     }
                     .tint(.purple)
                 }
+                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                    Button(role: .destructive) {
+                        if let idx = store.servers.firstIndex(where: { $0.id == server.id }) {
+                            store.deleteServer(at: IndexSet(integer: idx))
+                        }
+                    } label: {
+                        Label("Delete", systemImage: "trash")
+                    }
+                    Button {
+                        editingServer = server
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
+                    }
+                    .tint(.orange)
+                }
                 .contextMenu {
                     Button {
                         selectedServer = server
                     } label: {
                         Label("Connect", systemImage: "terminal")
+                    }
+                    Button {
+                        editingServer = server
+                    } label: {
+                        Label("Edit", systemImage: "pencil")
                     }
                     Button {
                         provisioningServer = server

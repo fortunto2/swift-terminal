@@ -11,7 +11,7 @@ This project uses a **hybrid SwiftPM + XcodeGen** approach:
 ## Bundle Identifier
 
 ```
-com.fortunto2.swift-terminal
+co.superduperai.swift-terminal
 ```
 
 ## Deployment Targets

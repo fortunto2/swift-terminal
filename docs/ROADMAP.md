@@ -213,6 +213,9 @@ Detailed implementation plan based on Blink Shell gap analysis and competitive r
 | **Claude Code UX** | ❌ | ✅ | **Our advantage** |
 | **Keyboard bar** | ❌ | ✅ | **Our advantage** |
 | **Biometric lock** | ❌ | ✅ | **Our advantage** |
+| **Voice dictation** | ❌ | ✅ | **Our advantage** |
+| **Slash command menus** | ❌ | ✅ | **Our advantage** |
+| **Debug overlay** | ❌ | ✅ (DEBUG) | **Our advantage** |
 
 ## Priority Order (MVP remaining)
 
@@ -231,17 +234,19 @@ Package.swift: `branch: "stable-1.5.1-sync-output"`.
 Upstream latest: ~1.9.x.
 
 ### Наш форк: что добавлено
-На базе стабильной 1.5.1 (до regression #405) добавлен **один коммит**:
+На базе стабильной 1.5.1 (до regression #405) добавлены:
 - **DEC Private Mode 2026 (Synchronized Output)** — при batch redraw (Claude Code, TUI apps) копит dirty regions и рендерит атомарно, убирает visual tearing. Спецификация: [synchronized-output](https://gist.github.com/christianparpart/d8a62cc1ab659194571ec44513cb14d7).
+- **Emoji copy fix (#414)** — cherry-pick: wide characters (emoji) копировались с null bytes, теперь заменяются на spaces.
 
 ### Стратегия обновления
 **Не обновлять upstream до фикса #405.** Баг "Window Resize on Coding Agents (Claude Code)" появился в 1.6.0: при resize окна ломается reflow → двойные строки, бесконечный скролл. Reopened 25 Jan 2026, фикса нет.
 
 **Plan A** (текущий): Оставаться на форке 1.5.1 + sync output. Cherry-pick нужные фиксы из upstream:
-- **#441** — text wrapping overflow с Claude Code
-- **#443** — carriage return buffer corruption on redraw
-- **#440** — Ctrl+C не работает
-- **#415/#414** — emoji rendering/copying
+- ~~**#414** — emoji null copy~~ ✅ cherry-picked
+- **#441** — text wrapping overflow с Claude Code (закрыт без PR, нельзя cherry-pick)
+- **#443** — carriage return buffer corruption on redraw (не баг SwiftTerm, пропускаем)
+- **#440** — Ctrl+C не работает (environment-specific, пропускаем)
+- **#415/#422** — emoji rendering / CJK cursor drift (конфликт с segment refactor из 1.6.0+, нельзя cherry-pick без resize бага)
 
 **Plan B**: Дождаться фикса #405 в upstream, merge и добавить наш sync output коммит.
 
