@@ -27,6 +27,14 @@ let package = Package(
             dependencies: ["SwiftTerminalCore"],
             path: "Sources/SwiftTerminal"
         ),
+        // CLI for local macOS testing
+        .executableTarget(
+            name: "SwiftTerminalCLI",
+            dependencies: [
+                .product(name: "Citadel", package: "Citadel"),
+            ],
+            path: "Sources/SwiftTerminalCLI"
+        ),
         // Tests depend on core library only
         .testTarget(
             name: "SwiftTerminalTests",

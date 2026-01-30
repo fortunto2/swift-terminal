@@ -6,10 +6,8 @@ struct SwiftTerminalApp: App {
 
     var body: some Scene {
         WindowGroup {
-            NavigationStack {
-                ServerListView()
-            }
-            .environment(serverStore)
+            LockScreenView()
+                .environment(serverStore)
         }
     }
 }

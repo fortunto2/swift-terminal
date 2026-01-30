@@ -1,6 +1,40 @@
 import Foundation
 import CryptoKit
 @preconcurrency import Citadel
+@preconcurrency import NIOSSH
+import NIOCore
+
+/// Thread-safe writer wrapper for shell input.
+public final class ShellWriter: @unchecked Sendable {
+    private let lock = NSLock()
+    private var _writer: TTYStdinWriter?
+
+    init() {}
+
+    func set(_ writer: TTYStdinWriter) {
+        lock.withLock { _writer = writer }
+    }
+
+    func clear() {
+        lock.withLock { _writer = nil }
+    }
+
+    public func write(_ data: Data) {
+        let writer = lock.withLock { _writer }
+        guard let writer else { return }
+        Task {
+            try? await writer.write(ByteBuffer(data: data))
+        }
+    }
+
+    public func resize(cols: Int, rows: Int) {
+        let writer = lock.withLock { _writer }
+        guard let writer else { return }
+        Task {
+            try? await writer.changeSize(cols: cols, rows: rows, pixelWidth: 0, pixelHeight: 0)
+        }
+    }
+}
 
 /// Manages SSH connections using Citadel.
 @MainActor
@@ -8,11 +42,17 @@ import CryptoKit
 public final class SSHService {
     public private(set) var isConnected = false
     public private(set) var currentServer: Server?
+    public let shellWriter = ShellWriter()
     nonisolated(unsafe) private var client: SSHClient?
+    private var shellTask: Task<Void, Never>?
+
+    /// Called when shell output arrives. Set before starting shell.
+    public var onOutput: (@Sendable (Data) -> Void)?
 
     public init() {}
 
-    /// Connect to a server using password authentication.
+    // MARK: - Connect
+
     public func connect(to server: Server, password: String) async throws {
         let client = try await SSHClient.connect(
             host: server.host,
@@ -30,7 +70,6 @@ public final class SSHService {
         self.isConnected = true
     }
 
-    /// Connect to a server using a private key.
     public func connect(to server: Server, privateKeyData: Data, keyType: SSHKeyType) async throws {
         let authMethod: SSHAuthenticationMethod
 
@@ -38,13 +77,10 @@ public final class SSHService {
         case .ed25519:
             let privateKey = try Curve25519.Signing.PrivateKey(rawRepresentation: privateKeyData)
             authMethod = .ed25519(username: server.username, privateKey: privateKey)
-
         case .ecdsaP256:
             let privateKey = try P256.Signing.PrivateKey(rawRepresentation: privateKeyData)
             authMethod = .p256(username: server.username, privateKey: privateKey)
-
         case .rsa4096:
-            // RSA raw data is DER — parse via Citadel's Insecure.RSA
             throw SSHServiceError.authenticationFailed
         }
 
@@ -61,7 +97,48 @@ public final class SSHService {
         self.isConnected = true
     }
 
-    /// Execute a single command and return stdout as String.
+    // MARK: - Interactive Shell
+
+    public func startShell(cols: Int, rows: Int) {
+        guard let client else { return }
+
+        let onOutput = self.onOutput
+        let writer = self.shellWriter
+
+        let ptyRequest = SSHChannelRequestEvent.PseudoTerminalRequest(
+            wantReply: true,
+            term: "xterm-256color",
+            terminalCharacterWidth: cols,
+            terminalRowHeight: rows,
+            terminalPixelWidth: 0,
+            terminalPixelHeight: 0,
+            terminalModes: SSHTerminalModes([:])
+        )
+
+        shellTask = Task.detached {
+            do {
+                try await client.withPTY(ptyRequest) { inbound, outbound in
+                    writer.set(outbound)
+
+                    for try await output in inbound {
+                        let bytes: Data
+                        switch output {
+                        case .stdout(let buffer):
+                            bytes = Data(buffer: buffer)
+                        case .stderr(let buffer):
+                            bytes = Data(buffer: buffer)
+                        }
+                        onOutput?(bytes)
+                    }
+                }
+            } catch {
+                // Shell session ended
+            }
+
+            writer.clear()
+        }
+    }
+
     public func execute(_ command: String) async throws -> String {
         guard let client else {
             throw SSHServiceError.notConnected
@@ -70,8 +147,10 @@ public final class SSHService {
         return String(buffer: buffer)
     }
 
-    /// Disconnect the current session.
     public func disconnect() async {
+        shellTask?.cancel()
+        shellTask = nil
+        shellWriter.clear()
         try? await client?.close()
         client = nil
         currentServer = nil

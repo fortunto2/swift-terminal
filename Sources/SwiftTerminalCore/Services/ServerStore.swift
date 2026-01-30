@@ -1,7 +1,8 @@
 import Foundation
 import SwiftUI
 
-/// Persistent store for servers and SSH keys. Uses JSON + UserDefaults for MVP.
+/// Persistent store for servers and SSH keys.
+/// Uses Keychain for persistence — data survives app reinstall.
 @MainActor
 @Observable
 public final class ServerStore {
@@ -14,7 +15,27 @@ public final class ServerStore {
     public init() {
         loadServers()
         loadKeys()
+        #if DEBUG
+        addDebugDefaultsIfNeeded()
+        #endif
     }
+
+    #if DEBUG
+    private func addDebugDefaultsIfNeeded() {
+        if servers.isEmpty {
+            servers = [
+                Server(
+                    name: "Test VPS",
+                    host: "203.0.113.10",
+                    username: "rustam",
+                    authMethod: .key,
+                    tags: ["dev", "test"]
+                )
+            ]
+            saveServers()
+        }
+    }
+    #endif
 
     // MARK: - Server CRUD
 
@@ -56,7 +77,6 @@ public final class ServerStore {
 
     public func deleteKey(_ key: SSHKey) {
         sshKeys.removeAll { $0.id == key.id }
-        // Also remove from Keychain
         try? KeychainService.delete(key: key.keychainTag)
         saveKeys()
     }
@@ -75,15 +95,15 @@ public final class ServerStore {
         return sshKeys.first { $0.id == id }
     }
 
-    // MARK: - Persistence
+    // MARK: - Persistence (Keychain — survives app reinstall)
 
     private func saveServers() {
         guard let data = try? JSONEncoder().encode(servers) else { return }
-        UserDefaults.standard.set(data, forKey: Self.serversKey)
+        try? KeychainService.save(key: Self.serversKey, data: data)
     }
 
     private func loadServers() {
-        guard let data = UserDefaults.standard.data(forKey: Self.serversKey),
+        guard let data = try? KeychainService.load(key: Self.serversKey),
               let decoded = try? JSONDecoder().decode([Server].self, from: data)
         else { return }
         servers = decoded
@@ -91,11 +111,11 @@ public final class ServerStore {
 
     private func saveKeys() {
         guard let data = try? JSONEncoder().encode(sshKeys) else { return }
-        UserDefaults.standard.set(data, forKey: Self.keysKey)
+        try? KeychainService.save(key: Self.keysKey, data: data)
     }
 
     private func loadKeys() {
-        guard let data = UserDefaults.standard.data(forKey: Self.keysKey),
+        guard let data = try? KeychainService.load(key: Self.keysKey),
               let decoded = try? JSONDecoder().decode([SSHKey].self, from: data)
         else { return }
         sshKeys = decoded

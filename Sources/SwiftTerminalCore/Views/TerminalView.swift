@@ -31,8 +31,11 @@ public struct TerminalView: View {
             case .connected:
                 GeometryReader { geo in
                     if geo.size.width > 0 && geo.size.height > 0 {
-                        TerminalViewRepresentable(initialSize: geo.size)
-                            .ignoresSafeArea(.keyboard)
+                        TerminalViewRepresentable(
+                            sshService: sshService,
+                            initialSize: geo.size
+                        )
+                        .ignoresSafeArea(.keyboard)
                     }
                 }
             case .failed:
@@ -126,10 +129,8 @@ public struct TerminalView: View {
         switch server.authMethod {
         case .password:
             showPasswordPrompt = true
-
         case .key:
             await connectWithKey()
-
         case .agent:
             connectionState = .failed
             errorMessage = "SSH Agent not yet supported"
@@ -178,7 +179,12 @@ public struct TerminalView: View {
 // MARK: - UIViewRepresentable for SwiftTerm
 
 public struct TerminalViewRepresentable: UIViewRepresentable {
+    let sshService: SSHService
     let initialSize: CGSize
+
+    public func makeCoordinator() -> Coordinator {
+        Coordinator(sshService: sshService)
+    }
 
     public func makeUIView(context: Context) -> SwiftTerm.TerminalView {
         let frame = CGRect(origin: .zero, size: initialSize)
@@ -190,15 +196,65 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         terminalView.nativeBackgroundColor = .black
         terminalView.nativeForegroundColor = .init(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
 
-        let welcome = "SwiftTerminal v0.1.0\r\nConnected.\r\n"
-        let bytes: [UInt8] = Array(welcome.utf8)
-        terminalView.feed(byteArray: ArraySlice(bytes))
+        // Set delegate to capture keyboard input
+        terminalView.terminalDelegate = context.coordinator
+        context.coordinator.terminalView = terminalView
+
+        // Start SSH shell and pipe output to terminal
+        let cols = terminalView.getTerminal().cols
+        let rows = terminalView.getTerminal().rows
+
+        sshService.onOutput = { [weak terminalView] data in
+            let bytes = Array(data)
+            DispatchQueue.main.async {
+                terminalView?.feed(byteArray: ArraySlice(bytes))
+            }
+        }
+
+        sshService.startShell(cols: cols, rows: rows)
+
+        // Make terminal first responder for keyboard
+        DispatchQueue.main.async {
+            terminalView.becomeFirstResponder()
+        }
 
         return terminalView
     }
 
     public func updateUIView(_ uiView: SwiftTerm.TerminalView, context: Context) {
-        // Updates handled by the terminal's internal state
+        // Size changes handled by SwiftTerm internally
+    }
+
+    // MARK: - Coordinator (TerminalViewDelegate)
+
+    public class Coordinator: NSObject, SwiftTerm.TerminalViewDelegate {
+        let sshService: SSHService
+        weak var terminalView: SwiftTerm.TerminalView?
+
+        init(sshService: SSHService) {
+            self.sshService = sshService
+        }
+
+        /// Called when user types — send input to SSH shell
+        public func send(source: SwiftTerm.TerminalView, data: ArraySlice<UInt8>) {
+            sshService.shellWriter.write(Data(data))
+        }
+
+        /// Terminal size changed — resize PTY
+        public func sizeChanged(source: SwiftTerm.TerminalView, newCols: Int, newRows: Int) {
+            sshService.shellWriter.resize(cols: newCols, rows: newRows)
+        }
+
+        public func setTerminalTitle(source: SwiftTerm.TerminalView, title: String) {}
+        public func setTerminalIconTitle(source: SwiftTerm.TerminalView, title: String) {}
+        public func scrolled(source: SwiftTerm.TerminalView, position: Double) {}
+        public func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {}
+        public func requestOpenLink(source: SwiftTerm.TerminalView, link: String, params: [String: String]) {}
+        public func rangeChanged(source: SwiftTerm.TerminalView, startY: Int, endY: Int) {}
+        public func clipboardCopy(source: SwiftTerm.TerminalView, content: Data) {
+            UIPasteboard.general.setData(content, forPasteboardType: "public.utf8-plain-text")
+        }
+        public func iTermContent(source: SwiftTerm.TerminalView, content: ArraySlice<UInt8>) {}
     }
 }
 
@@ -210,7 +266,6 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
 }
 
 #else
-// macOS stub — SwiftTerm terminal view requires UIKit on iOS
 import SwiftUI
 
 public struct TerminalView: View {
@@ -219,12 +274,6 @@ public struct TerminalView: View {
     public var body: some View {
         Text("Terminal view requires iOS")
             .navigationTitle(server.name)
-    }
-}
-
-public struct TerminalViewRepresentable: View {
-    public var body: some View {
-        Text("Terminal requires UIKit")
     }
 }
 #endif
