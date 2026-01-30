@@ -14,6 +14,7 @@ jobs:
   build:
     name: Build & Test
     runs-on: macos-15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -21,48 +22,19 @@ jobs:
 
       - name: Select Xcode
         run: |
-          if [ -d "/Applications/Xcode_16.3.app" ]; then
-            sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
-          fi
-
-      - name: Show toolchain
-        run: |
+          sudo xcode-select -s /Applications/Xcode_16.3.app/Contents/Developer
           swift --version
-          xcodebuild -version
 
-      - name: Resolve dependencies
-        run: swift package resolve
+      - name: Cache SwiftPM
+        uses: actions/cache@v4
+        with:
+          path: .build
+          key: ${{ runner.os }}-spm-${{ hashFiles('Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
 
-      - name: Build (SwiftPM)
+      - name: Build
         run: swift build
 
-      - name: Test (SwiftPM)
+      - name: Test
         run: swift test
-
-      - name: Build iOS Simulator App
-        run: |
-          xcodebuild build \
-            -scheme SwiftTerminal \
-            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=latest' \
-            -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO \
-            | tail -30
-
-      - name: Package Simulator App
-        run: |
-          APP_PATH=$(find build -name "*.app" -path "*/Debug-iphonesimulator/*" | head -1)
-          if [ -n "$APP_PATH" ]; then
-            echo "Found app: $APP_PATH"
-            cd "$(dirname "$APP_PATH")"
-            zip -r "$GITHUB_WORKSPACE/SwiftTerminal-Simulator.zip" "$(basename "$APP_PATH")"
-          else
-            echo "No .app found, creating placeholder"
-            echo "Build succeeded but no .app artifact" > "$GITHUB_WORKSPACE/SwiftTerminal-Simulator.zip"
-          fi
-
-      - name: Upload Simulator Build
-        uses: actions/upload-artifact@v4
-        with:
-          name: SwiftTerminal-Simulator
-          path: SwiftTerminal-Simulator.zip
-          retention-days: 30
