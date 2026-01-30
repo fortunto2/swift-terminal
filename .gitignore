@@ -5,4 +5,8 @@ xcuserdata/
 DerivedData/
 .swiftpm/xcode/package.xcworkspace/contents.xcworkspacedata
 .netrc
-*.xcodeproj
+
+# Track .xcodeproj for Xcode Cloud (generated via XcodeGen from project.yml)
+# Only ignore user-specific data inside it
+*.xcodeproj/xcuserdata/
+*.xcodeproj/project.xcworkspace/xcuserdata/
