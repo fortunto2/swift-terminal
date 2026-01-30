@@ -119,6 +119,8 @@ private struct GenerateKeyView: View {
     @State private var name = ""
     @State private var keyType: SSHKeyType = .ed25519
     @State private var isGenerating = false
+    @State private var errorMessage: String?
+    @State private var showCopiedToast = false
 
     public var body: some View {
         Form {
@@ -128,6 +130,14 @@ private struct GenerateKeyView: View {
                     ForEach(SSHKeyType.allCases) { type in
                         Text(type.displayName).tag(type)
                     }
+                }
+            }
+
+            if let errorMessage {
+                Section {
+                    Text(errorMessage)
+                        .foregroundStyle(.red)
+                        .font(.caption)
                 }
             }
 
@@ -150,7 +160,7 @@ private struct GenerateKeyView: View {
             } header: {
                 EmptyView()
             } footer: {
-                Text("The private key will be stored securely in the Keychain with biometric protection.")
+                Text("The private key will be stored securely in the Keychain with biometric protection. The public key will be copied to clipboard.")
             }
         }
         .navigationTitle("Generate SSH Key")
@@ -166,26 +176,41 @@ private struct GenerateKeyView: View {
 
     private func generateKey() {
         isGenerating = true
+        errorMessage = nil
 
-        // MVP: placeholder key generation
-        // Real implementation would use Security framework or CryptoKit
-        let key = SSHKey(
-            name: name.trimmingCharacters(in: .whitespaces),
-            keyType: keyType,
-            publicKey: "\(keyType.algorithmName) AAAA...placeholder... \(name)",
-            fingerprint: "SHA256:placeholder_\(UUID().uuidString.prefix(8))"
-        )
+        let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        let comment = "\(trimmedName)@iPhone"
 
-        // Store private key in Keychain (placeholder)
-        try? KeychainService.savePrivateKey(
-            "placeholder-private-key-\(key.id)",
-            tag: key.keychainTag,
-            requireBiometrics: true
-        )
+        do {
+            let generated = try SSHKeyGenerator.generate(type: keyType, comment: comment)
 
-        store.addKey(key)
-        isGenerating = false
-        dismiss()
+            let key = SSHKey(
+                name: trimmedName,
+                keyType: keyType,
+                publicKey: generated.publicKeyOpenSSH,
+                fingerprint: generated.fingerprint
+            )
+
+            // Store private key in Keychain
+            try KeychainService.savePrivateKey(
+                generated.privateKeyRaw,
+                tag: key.keychainTag,
+                requireBiometrics: true
+            )
+
+            store.addKey(key)
+
+            // Copy public key to clipboard
+            #if canImport(UIKit)
+            UIPasteboard.general.string = generated.publicKeyOpenSSH
+            #endif
+
+            isGenerating = false
+            dismiss()
+        } catch {
+            errorMessage = error.localizedDescription
+            isGenerating = false
+        }
     }
 }
 

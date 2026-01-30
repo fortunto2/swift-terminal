@@ -1,2 +1,2 @@
-// Re-export Foundation for convenience
-@_exported import Foundation
+// SwiftTerminalCore — unified into SwiftTerminal app target
+import Foundation

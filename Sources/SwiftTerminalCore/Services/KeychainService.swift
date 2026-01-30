@@ -84,12 +84,11 @@ public struct KeychainService: Sendable {
 
     // MARK: - SSH Key Operations
 
-    /// Save a private key to the Keychain with biometric protection.
-    public static func savePrivateKey(_ privateKey: String, tag: String, requireBiometrics: Bool = true) throws {
-        var accessFlags: SecAccessControlCreateFlags = [.privateKeyUsage]
-        if requireBiometrics {
-            accessFlags.insert(.biometryCurrentSet)
-        }
+    /// Save a private key (Data) to the Keychain with biometric protection.
+    public static func savePrivateKey(_ privateKeyData: Data, tag: String, requireBiometrics: Bool = true) throws {
+        let accessFlags: SecAccessControlCreateFlags = requireBiometrics
+            ? [.biometryCurrentSet]
+            : []
 
         let access = SecAccessControlCreateWithFlags(
             nil,
@@ -98,10 +97,6 @@ public struct KeychainService: Sendable {
             nil
         )
 
-        guard let data = privateKey.data(using: .utf8) else {
-            throw KeychainError.encodingFailed
-        }
-
         // Delete existing
         try? delete(key: tag)
 
@@ -109,7 +104,7 @@ public struct KeychainService: Sendable {
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
             kSecAttrAccount as String: tag,
-            kSecValueData as String: data,
+            kSecValueData as String: privateKeyData,
         ]
 
         if let access {
@@ -120,6 +115,14 @@ public struct KeychainService: Sendable {
         guard status == errSecSuccess else {
             throw KeychainError.saveFailed(status)
         }
+    }
+
+    /// Save a private key (String) to the Keychain with biometric protection.
+    public static func savePrivateKey(_ privateKey: String, tag: String, requireBiometrics: Bool = true) throws {
+        guard let data = privateKey.data(using: .utf8) else {
+            throw KeychainError.encodingFailed
+        }
+        try savePrivateKey(data, tag: tag, requireBiometrics: requireBiometrics)
     }
 
     /// Load a private key from the Keychain (may trigger biometric prompt).

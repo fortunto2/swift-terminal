@@ -9,6 +9,8 @@ public struct ServerListView: View {
     @State private var selectedServer: Server?
     @State private var searchText = ""
 
+    public init() {}
+
     private var filteredServers: [Server] {
         if searchText.isEmpty {
             store.servers

@@ -7,9 +7,12 @@ import SwiftTerm
 public struct TerminalView: View {
     let server: Server
 
+    @Environment(ServerStore.self) private var store
     @State private var sshService = SSHService()
     @State private var connectionState: ConnectionState = .disconnected
     @State private var errorMessage: String?
+    @State private var showPasswordPrompt = false
+    @State private var passwordInput = ""
 
     enum ConnectionState {
         case disconnected
@@ -26,8 +29,12 @@ public struct TerminalView: View {
             case .disconnected, .connecting:
                 connectingOverlay
             case .connected:
-                TerminalViewRepresentable()
-                    .ignoresSafeArea(.keyboard)
+                GeometryReader { geo in
+                    if geo.size.width > 0 && geo.size.height > 0 {
+                        TerminalViewRepresentable(initialSize: geo.size)
+                            .ignoresSafeArea(.keyboard)
+                    }
+                }
             case .failed:
                 failedOverlay
             }
@@ -55,6 +62,19 @@ public struct TerminalView: View {
                     Image(systemName: "ellipsis.circle")
                 }
             }
+        }
+        .alert("Enter Password", isPresented: $showPasswordPrompt) {
+            SecureField("Password", text: $passwordInput)
+            Button("Connect") {
+                Task { await connectWithPassword(passwordInput) }
+                passwordInput = ""
+            }
+            Button("Cancel", role: .cancel) {
+                connectionState = .disconnected
+                passwordInput = ""
+            }
+        } message: {
+            Text("Password for \(server.connectionString)")
         }
         .task {
             await connect()
@@ -103,10 +123,50 @@ public struct TerminalView: View {
         connectionState = .connecting
         errorMessage = nil
 
+        switch server.authMethod {
+        case .password:
+            showPasswordPrompt = true
+
+        case .key:
+            await connectWithKey()
+
+        case .agent:
+            connectionState = .failed
+            errorMessage = "SSH Agent not yet supported"
+        }
+    }
+
+    private func connectWithPassword(_ password: String) async {
+        connectionState = .connecting
         do {
-            // MVP: password auth placeholder — real implementation will use
-            // KeychainService to load private key or prompt for password
-            try await sshService.connect(to: server, password: "")
+            try await sshService.connect(to: server, password: password)
+            connectionState = .connected
+        } catch {
+            connectionState = .failed
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func connectWithKey() async {
+        guard let keyID = server.keyID,
+              let sshKey = store.key(for: keyID) else {
+            connectionState = .failed
+            errorMessage = "No SSH key assigned to this server"
+            return
+        }
+
+        do {
+            guard let privateKeyData = try KeychainService.load(key: sshKey.keychainTag) else {
+                connectionState = .failed
+                errorMessage = "Private key not found in Keychain"
+                return
+            }
+
+            try await sshService.connect(
+                to: server,
+                privateKeyData: privateKeyData,
+                keyType: sshKey.keyType
+            )
             connectionState = .connected
         } catch {
             connectionState = .failed
@@ -118,25 +178,26 @@ public struct TerminalView: View {
 // MARK: - UIViewRepresentable for SwiftTerm
 
 public struct TerminalViewRepresentable: UIViewRepresentable {
-    func makeUIView(context: Context) -> SwiftTerm.TerminalView {
-        let terminalView = SwiftTerm.TerminalView(frame: .zero)
+    let initialSize: CGSize
+
+    public func makeUIView(context: Context) -> SwiftTerm.TerminalView {
+        let frame = CGRect(origin: .zero, size: initialSize)
+        let terminalView = SwiftTerm.TerminalView(frame: frame)
         terminalView.backgroundColor = .black
 
-        // Configure terminal appearance
         let fontSize: CGFloat = 14
         terminalView.font = UIFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
         terminalView.nativeBackgroundColor = .black
         terminalView.nativeForegroundColor = .init(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
 
-        // Feed initial welcome text
-        let welcome = "SwiftTerminal v0.1.0\r\nConnecting...\r\n"
+        let welcome = "SwiftTerminal v0.1.0\r\nConnected.\r\n"
         let bytes: [UInt8] = Array(welcome.utf8)
-        terminalView.feed(byteArray: bytes)
+        terminalView.feed(byteArray: ArraySlice(bytes))
 
         return terminalView
     }
 
-    func updateUIView(_ uiView: SwiftTerm.TerminalView, context: Context) {
+    public func updateUIView(_ uiView: SwiftTerm.TerminalView, context: Context) {
         // Updates handled by the terminal's internal state
     }
 }
@@ -145,6 +206,7 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
     NavigationStack {
         TerminalView(server: .preview)
     }
+    .environment(ServerStore())
 }
 
 #else
