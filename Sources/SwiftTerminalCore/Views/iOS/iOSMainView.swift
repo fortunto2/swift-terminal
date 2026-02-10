@@ -39,7 +39,7 @@ public struct iOSMainView: View {
         VStack(spacing: 24) {
             Image(systemName: "lock.shield.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(.green)
+                .foregroundStyle(.teal)
 
             Text("SwiftTerminal")
                 .font(.title.bold())
@@ -63,7 +63,7 @@ public struct iOSMainView: View {
                     .frame(maxWidth: 200)
             }
             .buttonStyle(.borderedProminent)
-            .tint(.green)
+            .tint(.teal)
         }
         .onAppear {
             authenticate()

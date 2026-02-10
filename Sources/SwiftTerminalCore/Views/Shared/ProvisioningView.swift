@@ -148,7 +148,7 @@ public struct ProvisioningView: View {
                         ForEach(Array(logOutput.enumerated()), id: \.offset) { _, line in
                             Text(line)
                                 .font(.system(.caption2, design: .monospaced))
-                                .foregroundStyle(.green)
+                                .foregroundStyle(.teal)
                                 .textSelection(.enabled)
                         }
                     }
@@ -173,7 +173,7 @@ public struct ProvisioningView: View {
                 .controlSize(.small)
         case .completed:
             Image(systemName: "checkmark.circle.fill")
-                .foregroundStyle(.green)
+                .foregroundStyle(.teal)
         case .failed:
             Image(systemName: "xmark.circle.fill")
                 .foregroundStyle(.red)

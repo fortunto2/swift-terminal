@@ -29,7 +29,7 @@ struct TmuxSessionPickerView: View {
                                           systemImage: "rectangle.on.rectangle")
                                     if info.isAttached {
                                         Label("attached", systemImage: "link")
-                                            .foregroundStyle(.green)
+                                            .foregroundStyle(.teal)
                                     }
                                 }
                                 .font(.caption)
@@ -38,7 +38,7 @@ struct TmuxSessionPickerView: View {
                             Spacer()
                             if selected.contains(info.id) {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(.teal)
                                     .font(.title3)
                             } else {
                                 Image(systemName: "circle")

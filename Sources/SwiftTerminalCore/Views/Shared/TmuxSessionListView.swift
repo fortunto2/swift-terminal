@@ -46,7 +46,7 @@ struct TmuxSessionListView: View {
                         HStack(spacing: 6) {
                             if tmux.isOpen {
                                 Circle()
-                                    .fill(.green)
+                                    .fill(.teal)
                                     .frame(width: 8, height: 8)
                             }
                             Text(tmux.name)
@@ -59,7 +59,7 @@ struct TmuxSessionListView: View {
                             )
                             if tmux.isAttached {
                                 Label("attached", systemImage: "link")
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(.teal)
                             }
                         }
                         .font(.caption)
@@ -71,7 +71,7 @@ struct TmuxSessionListView: View {
                             sessionManager.switchToTmuxSession(localID: localID)
                         }
                         .buttonStyle(.borderedProminent)
-                        .tint(.green)
+                        .tint(.teal)
                         .controlSize(.small)
                     } else {
                         Button("Attach") {

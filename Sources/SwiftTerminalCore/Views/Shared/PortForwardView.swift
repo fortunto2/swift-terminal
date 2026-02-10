@@ -14,7 +14,7 @@ public struct PortForwardView: View {
                     ForEach(session.activeForwards) { forward in
                         HStack {
                             Image(systemName: forward.config.type.systemImage)
-                                .foregroundStyle(.green)
+                                .foregroundStyle(.teal)
                             VStack(alignment: .leading, spacing: 2) {
                                 if !forward.config.label.isEmpty {
                                     Text(forward.config.label)
@@ -26,7 +26,7 @@ public struct PortForwardView: View {
                             }
                             Spacer()
                             Circle()
-                                .fill(forward.isActive ? .green : .gray)
+                                .fill(forward.isActive ? .teal : .gray)
                                 .frame(width: 8, height: 8)
                         }
                         .swipeActions(edge: .trailing) {
@@ -72,7 +72,7 @@ public struct PortForwardView: View {
                                 }
                                 Image(systemName: "play.fill")
                                     .font(.caption)
-                                    .foregroundStyle(.green)
+                                    .foregroundStyle(.teal)
                             }
                         }
                         .tint(.primary)

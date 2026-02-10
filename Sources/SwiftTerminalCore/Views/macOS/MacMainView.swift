@@ -30,8 +30,8 @@ public struct MacMainView: View {
                                     .font(.caption2.weight(.semibold))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 1)
-                                    .background(.green.opacity(0.2))
-                                    .foregroundStyle(.green)
+                                    .background(.teal.opacity(0.2))
+                                    .foregroundStyle(.teal)
                                     .clipShape(Capsule())
                             }
                         }

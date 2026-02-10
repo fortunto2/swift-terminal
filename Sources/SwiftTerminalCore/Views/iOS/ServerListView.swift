@@ -247,7 +247,7 @@ private struct ServerRow: View {
                             .font(.headline)
                         if hasActiveSessions {
                             Circle()
-                                .fill(.green)
+                                .fill(.teal)
                                 .frame(width: 8, height: 8)
                         }
                     }

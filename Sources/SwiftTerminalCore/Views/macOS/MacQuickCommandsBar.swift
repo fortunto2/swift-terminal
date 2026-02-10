@@ -52,8 +52,8 @@ struct MacQuickCommandsBar: View {
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
-            .background(Color.green.opacity(0.2))
-            .foregroundStyle(.green)
+            .background(Color.teal.opacity(0.2))
+            .foregroundStyle(.teal)
             .clipShape(RoundedRectangle(cornerRadius: 4))
         }
         .menuStyle(.borderlessButton)

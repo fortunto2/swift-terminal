@@ -67,7 +67,7 @@ struct OnboardingView: View {
                 if hasKeys {
                     Spacer()
                     Image(systemName: "checkmark.circle.fill")
-                        .foregroundStyle(.green)
+                        .foregroundStyle(.teal)
                 }
             }
 
@@ -165,9 +165,9 @@ struct OnboardingView: View {
     private func stepBadge(number: Int, completed: Bool) -> some View {
         Text(completed ? "\u{2713}" : "\(number)")
             .font(.caption.bold())
-            .foregroundStyle(completed ? .green : .white)
+            .foregroundStyle(completed ? .teal : .white)
             .frame(width: 24, height: 24)
-            .background(completed ? Color.green.opacity(0.2) : Color.accentColor)
+            .background(completed ? Color.teal.opacity(0.2) : Color.accentColor)
             .clipShape(Circle())
     }
 

@@ -63,7 +63,7 @@ public struct TerminalView: View {
 
     public var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color(red: 0.11, green: 0.11, blue: 0.13).ignoresSafeArea()
 
             switch session.state {
             case .disconnected, .connecting:
@@ -116,7 +116,7 @@ public struct TerminalView: View {
                         Image(systemName: isKeyboardVisible
                               ? "keyboard.chevron.compact.down"
                               : "keyboard")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(.teal)
                     }
                 }
             }
@@ -152,7 +152,7 @@ public struct TerminalView: View {
             }
         }
         #if canImport(UIKit)
-        .toolbarBackground(.black, for: .bottomBar)
+        .toolbarBackground(Color(red: 0.11, green: 0.11, blue: 0.13), for: .bottomBar)
         .toolbarColorScheme(.dark, for: .bottomBar)
         #endif
         .alert("Enter Password", isPresented: $showPasswordPrompt) {
@@ -256,9 +256,9 @@ public struct TerminalView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .controlSize(.large)
-                .tint(.green)
+                .tint(.teal)
             Text("Connecting to \(session.server.connectionString)...")
-                .foregroundStyle(.green)
+                .foregroundStyle(.teal)
                 .font(.system(.body, design: .monospaced))
         }
     }
@@ -280,7 +280,7 @@ public struct TerminalView: View {
                 Task { await connect() }
             }
             .buttonStyle(.borderedProminent)
-            .tint(.green)
+            .tint(.teal)
         }
     }
 
@@ -377,12 +377,12 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         // Create new terminal view
         let frame = CGRect(origin: .zero, size: containerSize)
         let terminalView = SwiftTerm.TerminalView(frame: frame)
-        terminalView.backgroundColor = .black
+        terminalView.backgroundColor = UIColor(red: 0.11, green: 0.11, blue: 0.13, alpha: 1.0)
 
         let fontSize: CGFloat = 14
         terminalView.font = UIFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
-        terminalView.nativeBackgroundColor = .black
-        terminalView.nativeForegroundColor = .init(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
+        terminalView.nativeBackgroundColor = .init(red: 0.11, green: 0.11, blue: 0.13, alpha: 1.0)
+        terminalView.nativeForegroundColor = .init(red: 0.85, green: 0.85, blue: 0.87, alpha: 1.0)
 
         // Set delegate to capture keyboard input
         terminalView.terminalDelegate = context.coordinator
@@ -705,8 +705,8 @@ public struct MacTerminalViewRepresentable: NSViewRepresentable {
 
         let fontSize: CGFloat = 14
         terminalView.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
-        terminalView.nativeBackgroundColor = .black
-        terminalView.nativeForegroundColor = .init(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
+        terminalView.nativeBackgroundColor = .init(red: 0.11, green: 0.11, blue: 0.13, alpha: 1.0)
+        terminalView.nativeForegroundColor = .init(red: 0.85, green: 0.85, blue: 0.87, alpha: 1.0)
 
         terminalView.terminalDelegate = context.coordinator
         context.coordinator.terminalView = terminalView

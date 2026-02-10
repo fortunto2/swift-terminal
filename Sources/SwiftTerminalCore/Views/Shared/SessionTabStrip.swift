@@ -50,7 +50,7 @@ public struct SessionTabStrip: View {
                         .lineLimit(1)
                     Text(session.tmuxName)
                         .font(.system(size: 9, weight: .regular, design: .monospaced))
-                        .foregroundStyle(isActive ? .green.opacity(0.7) : .gray.opacity(0.7))
+                        .foregroundStyle(isActive ? .teal.opacity(0.7) : .gray.opacity(0.7))
                 }
 
                 Button {
@@ -66,9 +66,9 @@ public struct SessionTabStrip: View {
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 6)
-                    .fill(isActive ? Color.green.opacity(0.2) : Color.white.opacity(0.08))
+                    .fill(isActive ? Color.teal.opacity(0.2) : Color.white.opacity(0.08))
             )
-            .foregroundStyle(isActive ? .green : .gray)
+            .foregroundStyle(isActive ? .teal : .gray)
         }
         .buttonStyle(.plain)
         .contextMenu {
@@ -103,12 +103,12 @@ public struct SessionTabStrip: View {
         } label: {
             Image(systemName: "server.rack")
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.green)
+                .foregroundStyle(.teal)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.green.opacity(0.15))
+                        .fill(Color.teal.opacity(0.15))
                 )
         }
         .buttonStyle(.plain)
