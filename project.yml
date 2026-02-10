@@ -68,6 +68,7 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "8N495BBBLM"
+        CODE_SIGN_ENTITLEMENTS: SwiftTerminal.entitlements
       configs:
         Debug:
           SWIFT_OPTIMIZATION_LEVEL: "-Onone"
@@ -109,13 +110,16 @@ targets:
         COMBINE_HIDPI_IMAGES: "YES"
         CODE_SIGN_STYLE: Automatic
         DEVELOPMENT_TEAM: "8N495BBBLM"
+        ENABLE_HARDENED_RUNTIME: "YES"
       configs:
         Debug:
           SWIFT_OPTIMIZATION_LEVEL: "-Onone"
           SWIFT_ACTIVE_COMPILATION_CONDITIONS: "DEBUG"
+          CODE_SIGN_IDENTITY: "Apple Development"
         Release:
           SWIFT_OPTIMIZATION_LEVEL: "-O"
           SWIFT_COMPILATION_MODE: wholemodule
+          CODE_SIGN_IDENTITY: "Apple Distribution"
     scheme:
       gatherCoverageData: false
 

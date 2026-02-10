@@ -108,6 +108,9 @@ struct MacAddServerView: View {
                 authMethod = server.authMethod
                 selectedKeyID = server.keyID
                 tags = server.tags.joined(separator: ", ")
+            } else {
+                // Auto-select first available key for new servers
+                selectedKeyID = store.sshKeys.first?.id
             }
         }
         .sheet(isPresented: $showingProvisioningView) {

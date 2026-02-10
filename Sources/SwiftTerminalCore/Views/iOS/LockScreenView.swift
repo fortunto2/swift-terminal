@@ -7,7 +7,7 @@ public struct LockScreenView: View {
     @State private var isUnlocked = false
     @State private var authError: String?
     @Environment(\.scenePhase) private var scenePhase
-    @AppStorage("requireLockScreen") private var requireLockScreen = true
+    @AppStorage("requireLockScreen") private var requireLockScreen = false
 
     public init() {}
 

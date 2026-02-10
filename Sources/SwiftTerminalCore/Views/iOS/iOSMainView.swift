@@ -11,7 +11,7 @@ public struct iOSMainView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.modelContext) private var modelContext
     @Environment(SessionManager.self) private var sessionManager
-    @AppStorage("requireLockScreen") private var requireLockScreen = true
+    @AppStorage("requireLockScreen") private var requireLockScreen = false
 
     private var shouldLock: Bool { requireLockScreen }
 

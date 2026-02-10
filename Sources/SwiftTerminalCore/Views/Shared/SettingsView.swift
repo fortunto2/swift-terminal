@@ -8,8 +8,8 @@ public struct SettingsView: View {
     @AppStorage("defaultPort") private var defaultPort = 22
     @AppStorage("defaultUsername") private var defaultUsername = "root"
     @AppStorage("terminalFontSize") private var terminalFontSize = 14.0
-    @AppStorage("requireBiometrics") private var requireBiometrics = true
-    @AppStorage("requireLockScreen") private var requireLockScreen = true
+    @AppStorage("requireBiometrics") private var requireBiometrics = false
+    @AppStorage("requireLockScreen") private var requireLockScreen = false
     @AppStorage("autoReconnect") private var autoReconnect = true
     @AppStorage("autoTmux") private var autoTmux = true
 
@@ -94,8 +94,8 @@ public struct SettingsView: View {
         defaultPort = 22
         defaultUsername = "root"
         terminalFontSize = 14.0
-        requireBiometrics = true
-        requireLockScreen = true
+        requireBiometrics = false
+        requireLockScreen = false
         autoReconnect = true
         autoTmux = true
     }
