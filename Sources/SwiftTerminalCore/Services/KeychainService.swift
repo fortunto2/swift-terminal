@@ -1,10 +1,18 @@
 import Foundation
 import Security
+import LocalAuthentication
 
 /// Wrapper around iOS Keychain for storing SSH keys and credentials.
 public struct KeychainService: Sendable {
     /// Service identifier for Keychain items.
     private static let service = "com.swiftterminal"
+
+    /// Whether biometric protection is enabled in user settings.
+    static var isBiometricsEnabled: Bool {
+        // AppStorage default is true, so nil → true
+        UserDefaults.standard.object(forKey: "requireBiometrics") == nil
+            || UserDefaults.standard.bool(forKey: "requireBiometrics")
+    }
 
     // MARK: - Save
 
@@ -38,7 +46,56 @@ public struct KeychainService: Sendable {
     // MARK: - Load
 
     /// Load data from the Keychain.
+    /// Respects the biometrics setting: when OFF, tries silent read first,
+    /// and auto-migrates biometric-protected items to plain storage.
     public static func load(key: String) throws -> Data? {
+        #if os(iOS)
+        if !isBiometricsEnabled {
+            // Try silent read (no biometric UI)
+            let silentQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: key,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne,
+                kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail,
+            ]
+
+            var silentResult: AnyObject?
+            let silentStatus = SecItemCopyMatching(silentQuery as CFDictionary, &silentResult)
+
+            if silentStatus == errSecSuccess, let data = silentResult as? Data {
+                return data
+            }
+            if silentStatus == errSecItemNotFound {
+                return nil
+            }
+
+            // Item exists but requires auth — migrate: read with biometrics, re-save without
+            let authQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: key,
+                kSecReturnData as String: true,
+                kSecMatchLimit as String: kSecMatchLimitOne,
+                kSecUseOperationPrompt as String: "Migrate SSH key (one-time)",
+            ]
+
+            var authResult: AnyObject?
+            let authStatus = SecItemCopyMatching(authQuery as CFDictionary, &authResult)
+
+            if authStatus == errSecSuccess, let data = authResult as? Data {
+                // Re-save without biometric ACL
+                try? savePrivateKey(data, tag: key, requireBiometrics: false)
+                return data
+            }
+            if authStatus == errSecItemNotFound { return nil }
+            if authStatus == errSecUserCanceled { throw KeychainError.biometricCanceled }
+            throw KeychainError.loadFailed(authStatus)
+        }
+        #endif
+
+        // Biometrics ON or macOS — standard read
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -84,9 +141,11 @@ public struct KeychainService: Sendable {
 
     // MARK: - SSH Key Operations
 
-    /// Save a private key (Data) to the Keychain with biometric protection.
+    /// Save a private key (Data) to the Keychain, optionally with biometric protection.
     /// On macOS, always uses plain Keychain (no biometrics).
-    public static func savePrivateKey(_ privateKeyData: Data, tag: String, requireBiometrics: Bool = true) throws {
+    /// When `requireBiometrics` is nil, reads from the user's Settings toggle.
+    public static func savePrivateKey(_ privateKeyData: Data, tag: String, requireBiometrics: Bool? = nil) throws {
+        let requireBiometrics = requireBiometrics ?? isBiometricsEnabled
         // Delete existing
         try? delete(key: tag)
 
@@ -133,39 +192,18 @@ public struct KeychainService: Sendable {
         }
     }
 
-    /// Save a private key (String) to the Keychain with biometric protection.
-    public static func savePrivateKey(_ privateKey: String, tag: String, requireBiometrics: Bool = true) throws {
+    /// Save a private key (String) to the Keychain, optionally with biometric protection.
+    public static func savePrivateKey(_ privateKey: String, tag: String, requireBiometrics: Bool? = nil) throws {
         guard let data = privateKey.data(using: .utf8) else {
             throw KeychainError.encodingFailed
         }
         try savePrivateKey(data, tag: tag, requireBiometrics: requireBiometrics)
     }
 
-    /// Load a private key from the Keychain (may trigger biometric prompt).
+    /// Load a private key as String from the Keychain.
     public static func loadPrivateKey(tag: String) throws -> String? {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: tag,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseOperationPrompt as String: "Authenticate to use SSH key",
-        ]
-
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-
-        switch status {
-        case errSecSuccess:
-            guard let data = result as? Data else { return nil }
-            return String(data: data, encoding: .utf8)
-        case errSecItemNotFound:
-            return nil
-        case errSecUserCanceled:
-            throw KeychainError.biometricCanceled
-        default:
-            throw KeychainError.loadFailed(status)
-        }
+        guard let data = try load(key: tag) else { return nil }
+        return String(data: data, encoding: .utf8)
     }
 }
 

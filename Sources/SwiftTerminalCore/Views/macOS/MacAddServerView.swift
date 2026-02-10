@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 import AppKit
 
@@ -149,3 +150,4 @@ struct MacAddServerView: View {
         }
     }
 }
+#endif

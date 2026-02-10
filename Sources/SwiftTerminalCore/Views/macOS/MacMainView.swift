@@ -1,8 +1,10 @@
+#if os(macOS)
 import SwiftUI
 import SwiftData
 
 /// macOS root view: NavigationSplitView with sidebar for Sessions, Servers, SSH Keys.
-struct MacMainView: View {
+public struct MacMainView: View {
+    public init() {}
     @Environment(ServerStore.self) private var store
     @Environment(SessionManager.self) private var sessionManager
     @Environment(\.modelContext) private var modelContext
@@ -15,7 +17,7 @@ struct MacMainView: View {
 
     @State private var selection: SidebarItem? = .servers
 
-    var body: some View {
+    public var body: some View {
         NavigationSplitView {
             List(selection: $selection) {
                 Section {
@@ -78,3 +80,4 @@ struct MacMainView: View {
         }
     }
 }
+#endif

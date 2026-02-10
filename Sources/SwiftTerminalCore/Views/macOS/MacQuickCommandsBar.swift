@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 
 /// Quick commands bar for macOS terminal sessions.
@@ -17,6 +18,8 @@ struct MacQuickCommandsBar: View {
                 commandButton("/model", text: "/model")
                 commandButton("/config", text: "/config")
                 commandButton("/doctor", text: "/doctor")
+                divider
+                tmuxMenu
                 divider
                 controlButton("^C", bytes: [0x03])
                 controlButton("^D", bytes: [0x04])
@@ -55,6 +58,54 @@ struct MacQuickCommandsBar: View {
         }
         .menuStyle(.borderlessButton)
         .fixedSize()
+    }
+
+    // MARK: - Tmux Menu
+
+    private var tmuxMenu: some View {
+        Menu {
+            Section("Windows") {
+                Button("New Window") { sendText("tmux new-window") }
+                Button("Next Window") { sendText("tmux next-window") }
+                Button("Prev Window") { sendText("tmux previous-window") }
+                Button("List Windows") { sendText("tmux list-windows") }
+            }
+            Section("Panes") {
+                Button("Split Horiz") { sendText("tmux split-window -v") }
+                Button("Split Vert") { sendText("tmux split-window -h") }
+                Button("Zoom Pane") { sendText("tmux resize-pane -Z") }
+                Button("Kill Pane") { sendText("tmux kill-pane") }
+            }
+            Section("Sessions") {
+                Button("List Sessions") { sendText("tmux list-sessions") }
+                Button("New Session") { sendText("tmux new-session -d") }
+                Button("Session Chooser") { sendTmuxKey("s") }
+                Button("Detach") { sendText("tmux detach") }
+            }
+        } label: {
+            HStack(spacing: 4) {
+                Text("tmux")
+                    .font(.system(size: 12, weight: .medium, design: .monospaced))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 8, weight: .bold))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(Color.teal.opacity(0.2))
+            .foregroundStyle(.teal)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
+        }
+        .menuStyle(.borderlessButton)
+        .fixedSize()
+    }
+
+    /// Send tmux prefix (Ctrl-B) followed by a key character.
+    private func sendTmuxKey(_ key: String) {
+        let prefix = Data([0x02])
+        session.sshService.shellWriter.write(prefix)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak session] in
+            session?.sshService.shellWriter.write(Data(key.utf8))
+        }
     }
 
     // MARK: - Buttons
@@ -107,3 +158,4 @@ struct MacQuickCommandsBar: View {
         session.sshService.shellWriter.write(Data(bytes))
     }
 }
+#endif

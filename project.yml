@@ -17,18 +17,33 @@ packages:
     branch: stable-1.5.1-sync-output
 
 targets:
+  SwiftTerminalCore:
+    type: framework
+    supportedDestinations: [iOS, macOS]
+    deploymentTarget:
+      iOS: "18.0"
+      macOS: "15.0"
+    sources:
+      - path: Sources/SwiftTerminalCore
+    dependencies:
+      - package: Citadel
+      - package: SwiftTerm
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal-core
+        GENERATE_INFOPLIST_FILE: "YES"
+        SWIFT_VERSION: "6.0"
+        SWIFT_STRICT_CONCURRENCY: complete
+        MACH_O_TYPE: staticlib
+
   SwiftTerminal:
     type: application
     platform: iOS
     deploymentTarget: "18.0"
     sources:
       - path: Sources/SwiftTerminal
-      - path: Sources/SwiftTerminalCore
-        excludes:
-          - "Views/macOS/**"
     dependencies:
-      - package: Citadel
-      - package: SwiftTerm
+      - target: SwiftTerminalCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal
@@ -71,12 +86,8 @@ targets:
     deploymentTarget: "15.0"
     sources:
       - path: Sources/SwiftTerminal
-      - path: Sources/SwiftTerminalCore
-        excludes:
-          - "Views/iOS/**"
     dependencies:
-      - package: Citadel
-      - package: SwiftTerm
+      - target: SwiftTerminalCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal-mac
@@ -115,7 +126,7 @@ targets:
     sources:
       - path: Tests/SwiftTerminalTests
     dependencies:
-      - target: SwiftTerminal
+      - target: SwiftTerminalCore
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal.tests

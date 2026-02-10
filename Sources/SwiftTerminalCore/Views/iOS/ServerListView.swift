@@ -1,3 +1,4 @@
+#if os(iOS)
 import SwiftUI
 
 /// Main view — shows a list of saved servers with connection actions.
@@ -285,3 +286,4 @@ private struct ServerRow: View {
     .environment(ServerStore())
     .environment(SessionManager())
 }
+#endif

@@ -140,8 +140,9 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         rightViews.forEach { sizeView($0, important: true) }
         let fixedSpace = (leftViews + rightViews).reduce(0.0) { $0 + $1.frame.width + buttonPad }
 
-        // --- Float group: / menu, then F1..F10 ---
+        // --- Float group: / menu, tmux menu, then F1..F10 ---
         floatViews.append(makeSlashMenuButton())
+        floatViews.append(makeTmuxMenuButton())
 
         floatViews.forEach { sizeView($0, important: true) }
         let floatFixedSpace = floatViews.reduce(fixedSpace) { $0 + $1.frame.width + buttonPad }
@@ -168,7 +169,7 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         }
 
         // Size the F-key (non-important) float views
-        let fKeyStart = 1 // first 1 is / menu
+        let fKeyStart = 2 // first 2 are / menu and tmux menu
         for i in fKeyStart..<floatViews.count {
             sizeView(floatViews[i], important: false)
         }
@@ -287,6 +288,65 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         return b
     }
 
+    /// "tmux" button with a dropdown menu for tmux commands.
+    private func makeTmuxMenuButton() -> UIButton {
+        let windowCmds: [(String, String, String)] = [
+            ("New Window",    "rectangle.badge.plus",      "tmux new-window"),
+            ("Next Window",   "arrow.right",               "tmux next-window"),
+            ("Prev Window",   "arrow.left",                "tmux previous-window"),
+            ("List Windows",  "list.bullet.rectangle",     "tmux list-windows"),
+        ]
+        let paneCmds: [(String, String, String)] = [
+            ("Split Horiz",   "rectangle.split.1x2",       "tmux split-window -v"),
+            ("Split Vert",    "rectangle.split.2x1",       "tmux split-window -h"),
+            ("Zoom Pane",     "arrow.up.left.and.arrow.down.right", "tmux resize-pane -Z"),
+            ("Kill Pane",     "xmark.rectangle",           "tmux kill-pane"),
+        ]
+        let sessionCmds: [(String, String, String)] = [
+            ("List Sessions", "list.bullet",               "tmux list-sessions"),
+            ("New Session",   "plus.rectangle",            "tmux new-session -d"),
+            ("Detach",        "eject",                     "tmux detach"),
+        ]
+
+        func makeItems(_ cmds: [(String, String, String)], destructive: Bool = false) -> [UIAction] {
+            cmds.map { (label, icon, cmd) in
+                UIAction(
+                    title: label,
+                    image: UIImage(systemName: icon),
+                    attributes: destructive ? .destructive : []
+                ) { [weak self] _ in
+                    self?.clickAndSendText(cmd)
+                }
+            }
+        }
+
+        // Session Chooser uses tmux prefix key (Ctrl-B + s) since it's interactive
+        let chooserItem = UIAction(
+            title: "Session Chooser",
+            image: UIImage(systemName: "rectangle.stack")
+        ) { [weak self] _ in
+            UIDevice.current.playInputClick()
+            self?.sendTmuxKey(0x73) // ^B s
+        }
+
+        let menu = UIMenu(title: "tmux", children: [
+            UIMenu(title: "", options: .displayInline, children: makeItems(windowCmds)),
+            UIMenu(title: "", options: .displayInline, children: makeItems(paneCmds)),
+            UIMenu(title: "", options: .displayInline, children: makeItems(sessionCmds) + [chooserItem]),
+        ])
+
+        let b = makeButton("tmux", #selector(noop), isDark: true)
+        if let hb = b as? HighlightButton {
+            hb.normalColor = .systemTeal
+        }
+        b.backgroundColor = .systemTeal
+        b.titleLabel?.font = UIFont.monospacedSystemFont(ofSize: 13, weight: .medium)
+        b.menu = menu
+        b.showsMenuAsPrimaryAction = true
+        b.removeTarget(self, action: #selector(noop), for: .touchDown)
+        return b
+    }
+
     /// "claude" button with a dropdown menu for launching Claude.
     private func makeClaudeMenuButton() -> UIButton {
         let launchCmds: [(String, String, String)] = [
@@ -359,6 +419,14 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         UIDevice.current.playInputClick()
         let bytes = Array((text + "\n").utf8)
         terminalView?.send(bytes)
+    }
+
+    /// Send tmux prefix (Ctrl-B) followed by a command byte with a small delay.
+    private func sendTmuxKey(_ commandByte: UInt8) {
+        terminalView?.send([0x02])
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) { [weak self] in
+            self?.terminalView?.send([commandByte])
+        }
     }
 
     @objc private func escAction() { clickAndSend([0x1B]) }

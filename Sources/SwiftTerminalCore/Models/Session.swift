@@ -56,6 +56,8 @@ public final class Session: Identifiable {
     public let tmuxName: String
     public var createdAt = Date.now
     public var lastActivity = Date.now
+    /// Whether this session was discovered from an existing tmux session (not created by us).
+    public var isDiscovered: Bool
     public var activeForwards: [ActivePortForward] = []
     var reconnectTask: Task<Void, Never>?
 
@@ -71,7 +73,18 @@ public final class Session: Identifiable {
         self.server = server
         self.sshService = SSHService()
         self.tmuxName = "st-\(index)"
+        self.isDiscovered = false
         stLog("init session \(tmuxName) for \(server.name)")
+    }
+
+    /// Init for discovered (pre-existing) tmux sessions with custom names.
+    public init(server: Server, tmuxSessionName: String) {
+        self.id = UUID()
+        self.server = server
+        self.sshService = SSHService()
+        self.tmuxName = tmuxSessionName
+        self.isDiscovered = true
+        stLog("init discovered session \(tmuxName) for \(server.name)")
     }
 
     // MARK: - Connect
@@ -168,9 +181,6 @@ public final class Session: Identifiable {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 tv.feed(byteArray: ArraySlice(bytes))
-                #if canImport(UIKit)
-                tv.contentOffset = .zero
-                #endif
                 CATransaction.commit()
             }
         }
@@ -179,7 +189,12 @@ public final class Session: Identifiable {
 
         // tmux attach after shell has time to initialize
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
-            self?.sendTmuxAttach()
+            guard let self else { return }
+            if self.isDiscovered {
+                self.sendTmuxAttachExisting()
+            } else {
+                self.sendTmuxAttach()
+            }
         }
     }
 
@@ -207,9 +222,6 @@ public final class Session: Identifiable {
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 tv.feed(byteArray: ArraySlice(bytes))
-                #if canImport(UIKit)
-                tv.contentOffset = .zero
-                #endif
                 CATransaction.commit()
             }
         }
@@ -218,6 +230,8 @@ public final class Session: Identifiable {
         shellStarted = true
 
         // Re-attach to tmux (session should still be alive on server)
+        // Always use sendTmuxReattach (new-session -A) — works for both st-* and discovered.
+        // This handles the case where the session was killed while disconnected.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
             self?.sendTmuxReattach()
         }
@@ -233,9 +247,8 @@ public final class Session: Identifiable {
             || UserDefaults.standard.bool(forKey: "autoTmux")
     }
 
-    /// Inline shell snippet that checks for tmux, installs if missing, then runs the given tmux command.
-    private func tmuxEnsureAndRun(_ tmuxCmd: String) -> String {
-        """
+    /// Full install-check script — only used on first connection to a server.
+    public static let tmuxInstallScript = """
         if ! command -v tmux >/dev/null 2>&1; then \
         echo '[st] tmux not found, installing...'; \
         if command -v apt-get >/dev/null 2>&1; then sudo apt-get update -qq && sudo apt-get install -y -qq tmux; \
@@ -245,14 +258,26 @@ public final class Session: Identifiable {
         elif command -v brew >/dev/null 2>&1; then brew install tmux; \
         elif command -v pacman >/dev/null 2>&1; then sudo pacman -S --noconfirm tmux; \
         else echo '[st] cannot install tmux: unknown package manager'; fi; \
-        fi; \
-        \(tmuxCmd)
+        fi
         """
+
+    /// Build the tmux command, with install check only on first connection to this server.
+    private func tmuxCommand(_ tmuxCmd: String, store: ServerStore?) -> String {
+        if server.tmuxVerified == true {
+            return tmuxCmd
+        }
+        // Mark as verified and persist
+        if let store {
+            var updated = server
+            updated.tmuxVerified = true
+            store.updateServer(updated)
+        }
+        return "\(Session.tmuxInstallScript); \(tmuxCmd)"
     }
 
     private var tmuxAttached = false
 
-    public func sendTmuxAttach() {
+    public func sendTmuxAttach(store: ServerStore? = nil) {
         guard isTmuxEnabled else {
             stLog("\(tmuxName) tmux disabled, skip attach")
             return
@@ -262,21 +287,41 @@ public final class Session: Identifiable {
             return
         }
         tmuxAttached = true
-        let tmuxCmd = "tmux new-session -A -s \(tmuxName) \\; set remain-on-exit on"
+        let tmuxCmd = "tmux new-session -A -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on"
         stLog("\(tmuxName) sendTmuxAttach: \(tmuxCmd)")
-        let cmd = tmuxEnsureAndRun(tmuxCmd)
+        let cmd = tmuxCommand(tmuxCmd, store: store)
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
     }
 
-    public func sendTmuxReattach() {
+    public func sendTmuxReattach(store: ServerStore? = nil) {
         guard isTmuxEnabled else {
             stLog("\(tmuxName) tmux disabled, skip reattach")
             return
         }
+        tmuxAttached = true
         stLog("\(tmuxName) sendTmuxReattach")
-        let cmd = tmuxEnsureAndRun(
-            "tmux attach -t \(tmuxName) 2>/dev/null || tmux new -s \(tmuxName) \\; set remain-on-exit on"
+        // Use new-session -A (create-or-attach) for both st-* and discovered sessions.
+        // This handles the case where the tmux session was killed while we were disconnected.
+        let cmd = tmuxCommand(
+            "tmux new-session -A -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on",
+            store: store
         )
+        sshService.shellWriter.write(Data((cmd + "\n").utf8))
+    }
+
+    /// Attach to a pre-existing (discovered) tmux session — uses attach-session, not new-session.
+    public func sendTmuxAttachExisting() {
+        guard isTmuxEnabled else {
+            stLog("\(tmuxName) tmux disabled, skip attach existing")
+            return
+        }
+        guard !tmuxAttached else {
+            stLog("\(tmuxName) sendTmuxAttachExisting: ALREADY ATTACHED, skipping")
+            return
+        }
+        tmuxAttached = true
+        let cmd = "tmux new-session -A -s \(tmuxName) \\; set mouse on"
+        stLog("\(tmuxName) sendTmuxAttachExisting: \(cmd)")
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
     }
 
@@ -287,18 +332,21 @@ public final class Session: Identifiable {
         var attempt = 0
         stLog("\(tmuxName) startAutoReconnect")
         reconnectTask = Task { [weak self] in
-            let maxAttempts = 5
+            let maxAttempts = 15
             while attempt < maxAttempts, !Task.isCancelled {
                 attempt += 1
                 self?.state = .reconnecting(attempt: attempt)
                 stLog("\(self?.tmuxName ?? "?") reconnect attempt \(attempt)")
 
-                // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-                let delay = UInt64(pow(2.0, Double(attempt - 1))) * 1_000_000_000
+                // Exponential backoff capped at 30s: 1, 2, 4, 8, 16, 30, 30, ...
+                let backoff = min(pow(2.0, Double(attempt - 1)), 30.0)
+                let delay = UInt64(backoff) * 1_000_000_000
                 try? await Task.sleep(nanoseconds: delay)
                 if Task.isCancelled { return }
 
                 await self?.sshService.disconnect()
+                self?.shellStarted = false
+                self?.tmuxAttached = false
 
                 do {
                     try await self?.reconnectSSH(using: store)
@@ -344,8 +392,13 @@ public final class Session: Identifiable {
             Task { @MainActor [weak self] in
                 guard let self else { return }
                 stLog("\(self.tmuxName) onDisconnect fired, state=\(self.state), autoReconnect=\(autoReconnect)")
-                guard self.state.isConnected else { return }
+                // Only react if we were connected (not if already disconnecting/failed)
+                guard self.state.isConnected || {
+                    if case .reconnecting = self.state { return true }
+                    return false
+                }() else { return }
                 self.shellStarted = false
+                self.tmuxAttached = false
                 if autoReconnect {
                     self.startAutoReconnect(using: store)
                 } else {

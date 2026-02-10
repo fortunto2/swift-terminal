@@ -1,9 +1,11 @@
+#if os(iOS)
 import SwiftUI
 import SwiftData
 import LocalAuthentication
 
 /// iOS root view: LockScreen gate → NavigationStack → ServerListView.
-struct iOSMainView: View {
+public struct iOSMainView: View {
+    public init() {}
     @State private var isUnlocked = false
     @State private var authError: String?
     @Environment(\.scenePhase) private var scenePhase
@@ -13,7 +15,7 @@ struct iOSMainView: View {
 
     private var shouldLock: Bool { requireLockScreen }
 
-    var body: some View {
+    public var body: some View {
         Group {
             if isUnlocked || !shouldLock {
                 NavigationStack {
@@ -103,3 +105,4 @@ struct iOSMainView: View {
         }
     }
 }
+#endif

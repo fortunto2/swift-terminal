@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import SwiftTerminalCore
 
 @main
 struct SwiftTerminalApp: App {

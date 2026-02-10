@@ -1,3 +1,4 @@
+#if os(iOS)
 import SwiftUI
 
 /// Form for adding or editing an SSH server.
@@ -16,6 +17,7 @@ public struct AddServerView: View {
     @State private var selectedKeyID: UUID?
     @State private var tags = ""
     @State private var showingProvisioningView = false
+    @State private var tmuxReinstallQueued = false
 
     private var isEditing: Bool { existingServer != nil }
 
@@ -82,6 +84,26 @@ public struct AddServerView: View {
                     #if os(iOS)
                     .textInputAutocapitalization(.never)
                     #endif
+            }
+
+            if isEditing {
+                Section {
+                    Button {
+                        if var server = existingServer {
+                            server.tmuxVerified = nil
+                            store.updateServer(server)
+                        }
+                        tmuxReinstallQueued = true
+                    } label: {
+                        Label(
+                            tmuxReinstallQueued ? "Will install on next connect" : "Reinstall tmux",
+                            systemImage: tmuxReinstallQueued ? "checkmark.circle" : "terminal"
+                        )
+                    }
+                    .disabled(tmuxReinstallQueued)
+                } footer: {
+                    Text("Runs the tmux install check on next connection to this server.")
+                }
             }
 
             if !isEditing {
@@ -171,3 +193,4 @@ public struct AddServerView: View {
     }
     .environment(ServerStore())
 }
+#endif

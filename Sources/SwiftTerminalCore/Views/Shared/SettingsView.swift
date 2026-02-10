@@ -2,6 +2,7 @@ import SwiftUI
 
 /// App settings — appearance, defaults, about.
 public struct SettingsView: View {
+    public init() {}
     @Environment(\.dismiss) private var dismiss
 
     @AppStorage("defaultPort") private var defaultPort = 22

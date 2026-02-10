@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 
 /// macOS inline sessions view: tab strip + quick commands + terminal.
@@ -142,3 +143,4 @@ struct MacSessionsView: View {
         }
     }
 }
+#endif

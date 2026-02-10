@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 import AppKit
 
@@ -179,3 +180,4 @@ private struct MacServerRow: View {
         .tint(.primary)
     }
 }
+#endif

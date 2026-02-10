@@ -1,9 +1,6 @@
+#if os(iOS)
 import SwiftUI
-#if canImport(UIKit)
 import UIKit
-#elseif os(macOS)
-import AppKit
-#endif
 
 /// Manage SSH keys — generate, import, list, and delete.
 public struct KeyManagementView: View {
@@ -121,12 +118,7 @@ public struct KeyManagementView: View {
     }
 
     private func copyPublicKey(_ key: SSHKey) {
-        #if canImport(UIKit)
         UIPasteboard.general.string = key.publicKey
-        #elseif os(macOS)
-        NSPasteboard.general.clearContents()
-        NSPasteboard.general.setString(key.publicKey, forType: .string)
-        #endif
     }
 }
 
@@ -206,8 +198,7 @@ private struct ImportKeyView: View {
         // Store private key in Keychain
         try? KeychainService.savePrivateKey(
             privateKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            tag: key.keychainTag,
-            requireBiometrics: true
+            tag: key.keychainTag
         )
 
         store.addKey(key)
@@ -231,3 +222,4 @@ private struct ImportKeyView: View {
     }
     .environment(ServerStore())
 }
+#endif

@@ -111,8 +111,7 @@ struct GenerateKeyView: View {
             // Store private key in Keychain
             try KeychainService.savePrivateKey(
                 generated.privateKeyRaw,
-                tag: key.keychainTag,
-                requireBiometrics: true
+                tag: key.keychainTag
             )
 
             store.addKey(key)

@@ -117,7 +117,15 @@ public final class SSHService {
             terminalRowHeight: rows,
             terminalPixelWidth: 0,
             terminalPixelHeight: 0,
-            terminalModes: SSHTerminalModes([:])
+            terminalModes: SSHTerminalModes([
+                .VERASE: 0x7F,   // DEL for backspace
+                .VINTR:  0x03,   // ^C
+                .VEOF:   0x04,   // ^D
+                .VSUSP:  0x1A,   // ^Z
+                .VQUIT:  0x1C,   // ^\
+                .VKILL:  0x15,   // ^U
+                .VWERASE: 0x17,  // ^W
+            ])
         )
 
         shellTask = Task.detached {

@@ -1,3 +1,4 @@
+#if os(macOS)
 import SwiftUI
 import AppKit
 
@@ -188,8 +189,7 @@ private struct MacImportKeyView: View {
 
         try? KeychainService.savePrivateKey(
             privateKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            tag: key.keychainTag,
-            requireBiometrics: true
+            tag: key.keychainTag
         )
 
         store.addKey(key)
@@ -206,3 +206,4 @@ private struct MacImportKeyView: View {
         }
     }
 }
+#endif

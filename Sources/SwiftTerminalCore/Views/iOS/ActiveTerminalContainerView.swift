@@ -1,3 +1,4 @@
+#if os(iOS)
 import SwiftUI
 
 /// Full-screen container that shows the tab strip + active terminal session.
@@ -42,3 +43,4 @@ public struct ActiveTerminalContainerView: View {
         }
     }
 }
+#endif

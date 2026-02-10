@@ -38,6 +38,9 @@ public struct Server: Codable, Identifiable, Sendable, Hashable {
     public var createdAt: Date
     public var lastConnected: Date?
     public var portForwards: [PortForwardConfig]
+    /// Whether tmux has been verified/installed on this server.
+    /// nil = not checked yet (old data or new server).
+    public var tmuxVerified: Bool?
 
     public init(
         id: UUID = UUID(),
@@ -50,7 +53,8 @@ public struct Server: Codable, Identifiable, Sendable, Hashable {
         tags: [String] = [],
         createdAt: Date = .now,
         lastConnected: Date? = nil,
-        portForwards: [PortForwardConfig] = []
+        portForwards: [PortForwardConfig] = [],
+        tmuxVerified: Bool? = nil
     ) {
         self.id = id
         self.name = name
@@ -63,6 +67,7 @@ public struct Server: Codable, Identifiable, Sendable, Hashable {
         self.createdAt = createdAt
         self.lastConnected = lastConnected
         self.portForwards = portForwards
+        self.tmuxVerified = tmuxVerified
     }
 }
 

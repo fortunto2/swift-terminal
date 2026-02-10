@@ -1,3 +1,4 @@
+#if os(iOS)
 import SwiftUI
 import LocalAuthentication
 
@@ -103,3 +104,4 @@ public struct LockScreenView: View {
         }
     }
 }
+#endif

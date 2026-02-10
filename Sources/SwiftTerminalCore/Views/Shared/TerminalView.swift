@@ -168,6 +168,14 @@ public struct TerminalView: View {
         } message: {
             Text("Password for \(session.server.connectionString)")
         }
+        .sheet(isPresented: Binding(
+            get: { sessionManager.showTmuxPicker },
+            set: { if !$0 { sessionManager.dismissTmuxPicker() } }
+        )) {
+            TmuxSessionPickerView()
+                .environment(sessionManager)
+                .environment(store)
+        }
         .task {
             session.setupDisconnectHandler(using: store, autoReconnect: autoReconnect)
             // Don't re-connect if session is already connected (tab switch reuse)
@@ -177,6 +185,8 @@ public struct TerminalView: View {
             // Sync orphaned tmux sessions from server (runs once per server)
             if session.state.isConnected {
                 sessionManager.syncRemoteTmuxSessions(via: session, store: store)
+                // Discover user-created tmux sessions and offer to open them
+                sessionManager.discoverAllTmuxSessions(via: session, store: store)
             }
         }
         .onDisappear {
@@ -342,6 +352,17 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
             context.coordinator.removeObservers()
             attachObservers(to: existing, context: context)
 
+            // Re-target the scroll wheel gesture to the new coordinator
+            for gesture in existing.gestureRecognizers ?? [] {
+                if let pan = gesture as? UIPanGestureRecognizer,
+                   pan.maximumNumberOfTouches == 1 {
+                    pan.removeTarget(nil, action: nil)
+                    pan.addTarget(context.coordinator, action: #selector(Coordinator.handleScrollWheelPan(_:)))
+                    pan.delegate = context.coordinator
+                    context.coordinator.scrollWheelPanGesture = pan
+                }
+            }
+
             // Update frame
             existing.frame = CGRect(origin: .zero, size: containerSize)
             DispatchQueue.main.async {
@@ -397,6 +418,16 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
 
         attachObservers(to: terminalView, context: context)
 
+        // Add pan gesture for tmux mouse wheel scrollback.
+        // Must take priority over SwiftTerm's own panMouseGesture (which sends
+        // click+drag instead of wheel events).
+        let panGesture = UIPanGestureRecognizer(target: context.coordinator, action: #selector(Coordinator.handleScrollWheelPan(_:)))
+        panGesture.delegate = context.coordinator
+        panGesture.minimumNumberOfTouches = 1
+        panGesture.maximumNumberOfTouches = 1
+        terminalView.addGestureRecognizer(panGesture)
+        context.coordinator.scrollWheelPanGesture = panGesture
+
         // Make terminal first responder for keyboard
         DispatchQueue.main.async {
             let ok = terminalView.becomeFirstResponder()
@@ -447,6 +478,24 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
             uiView.setNeedsLayout()
             uiView.layoutIfNeeded()
         }
+
+        // Dynamic scroll mode: alt buffer (tmux) → disable UIScrollView scroll,
+        // normal buffer → enable for native scrollback
+        let terminal = uiView.getTerminal()
+        let inAltBuffer = terminal.isCurrentBufferAlternate
+        uiView.isScrollEnabled = !inAltBuffer
+
+        // Remove SwiftTerm's dynamically-added panMouseGesture (backup for rangeChanged)
+        if let wheelGesture = context.coordinator.scrollWheelPanGesture {
+            let builtInPan = uiView.panGestureRecognizer
+            for gesture in uiView.gestureRecognizers ?? [] {
+                if let pan = gesture as? UIPanGestureRecognizer,
+                   pan !== wheelGesture,
+                   pan !== builtInPan {
+                    uiView.removeGestureRecognizer(pan)
+                }
+            }
+        }
     }
 
     public static func dismantleUIView(_ uiView: SwiftTerm.TerminalView, coordinator: Coordinator) {
@@ -464,6 +513,8 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         var toggleObserver: Any?
         var showObserver: Any?
         var hideObserver: Any?
+        var scrollWheelPanGesture: UIPanGestureRecognizer?
+        private var lastWheelY: CGFloat = 0
 
         init(session: Session, isKeyboardVisible: Binding<Bool>) {
             self.session = session
@@ -500,11 +551,121 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
         public func scrolled(source: SwiftTerm.TerminalView, position: Double) {}
         public func hostCurrentDirectoryUpdate(source: SwiftTerm.TerminalView, directory: String?) {}
         public func requestOpenLink(source: SwiftTerm.TerminalView, link: String, params: [String: String]) {}
-        public func rangeChanged(source: SwiftTerm.TerminalView, startY: Int, endY: Int) {}
+        public func rangeChanged(source: SwiftTerm.TerminalView, startY: Int, endY: Int) {
+            // Capture before entering MainActor isolation to satisfy Swift 6.
+            let wheelGesture = scrollWheelPanGesture
+            // rangeChanged is always called on the main thread by SwiftTerm.
+            MainActor.assumeIsolated {
+                let inAltBuffer = source.getTerminal().isCurrentBufferAlternate
+
+                // Alt buffer (tmux) → disable UIScrollView scroll,
+                // normal buffer → enable for native scrollback.
+                if source.isScrollEnabled == inAltBuffer {
+                    source.isScrollEnabled = !inAltBuffer
+                }
+
+                // Remove SwiftTerm's dynamically-added panMouseGesture so it
+                // doesn't capture pans before our wheel gesture.  SwiftTerm adds
+                // it via mouseModeChanged → enableMousePanGesture; we strip it
+                // here because rangeChanged fires on every screen update and
+                // catches it right after it's added.
+                if let wheelGesture {
+                    let builtInPan = source.panGestureRecognizer
+                    for gesture in source.gestureRecognizers ?? [] {
+                        if let pan = gesture as? UIPanGestureRecognizer,
+                           pan !== wheelGesture,
+                           pan !== builtInPan {
+                            source.removeGestureRecognizer(pan)
+                        }
+                    }
+                }
+            }
+        }
         public func clipboardCopy(source: SwiftTerm.TerminalView, content: Data) {
             UIPasteboard.general.setData(content, forPasteboardType: "public.utf8-plain-text")
         }
         public func iTermContent(source: SwiftTerm.TerminalView, content: ArraySlice<UInt8>) {}
+    }
+}
+
+// MARK: - Coordinator + UIGestureRecognizerDelegate (tmux scroll wheel)
+
+@MainActor
+extension TerminalViewRepresentable.Coordinator: UIGestureRecognizerDelegate {
+
+    /// Whether the terminal is in a state where we should intercept pan
+    /// gestures and convert them to mouse wheel events (tmux with mouse on).
+    private var shouldSendMouseWheel: Bool {
+        guard let tv = terminalView else { return false }
+        let terminal = tv.getTerminal()
+        return terminal.mouseMode != .off && terminal.isCurrentBufferAlternate
+    }
+
+    /// Only begin the scroll-wheel pan when tmux mouse mode is active.
+    public func gestureRecognizerShouldBegin(_ gestureRecognizer: UIGestureRecognizer) -> Bool {
+        if gestureRecognizer === scrollWheelPanGesture {
+            return shouldSendMouseWheel
+        }
+        return true
+    }
+
+    /// Allow coexistence with SwiftTerm's own gestures when this one
+    /// doesn't activate (normal scrollback mode).
+    public func gestureRecognizer(
+        _ gestureRecognizer: UIGestureRecognizer,
+        shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer
+    ) -> Bool {
+        false
+    }
+
+    /// Converts vertical finger pans into mouse wheel escape sequences
+    /// (button 64 = scroll up, 65 = scroll down) that tmux understands.
+    @objc func handleScrollWheelPan(_ gesture: UIPanGestureRecognizer) {
+        guard let tv = terminalView else { return }
+        let terminal = tv.getTerminal()
+
+        switch gesture.state {
+        case .began:
+            lastWheelY = 0
+            #if DEBUG
+            scrollPrint("wheel gesture BEGAN mouseMode=\(terminal.mouseMode) altBuf=\(terminal.isCurrentBufferAlternate)")
+            #endif
+        case .changed:
+            let translation = gesture.translation(in: tv)
+            let deltaY = translation.y - lastWheelY
+
+            // Each ~20pt of finger movement sends one wheel event
+            let threshold: CGFloat = 20
+            let steps = Int(deltaY / threshold)
+            guard steps != 0 else { return }
+
+            lastWheelY += CGFloat(steps) * threshold
+
+            // button 4 = scroll up, button 5 = scroll down
+            let button = steps < 0 ? 4 : 5
+            let count = abs(steps)
+
+            let flags = terminal.encodeButton(
+                button: button,
+                release: false,
+                shift: false,
+                meta: false,
+                control: false
+            )
+
+            // Send from center of viewport
+            let midCol = terminal.cols / 2
+            let midRow = terminal.rows / 2
+
+            #if DEBUG
+            scrollPrint("wheel \(button == 4 ? "UP" : "DOWN") x\(count) flags=\(flags)")
+            #endif
+            for _ in 0..<count {
+                terminal.sendEvent(buttonFlags: flags, x: midCol, y: midRow)
+            }
+        default:
+            break
+        }
     }
 }
 #endif
