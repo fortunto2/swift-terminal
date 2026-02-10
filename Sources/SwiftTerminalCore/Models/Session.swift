@@ -287,7 +287,9 @@ public final class Session: Identifiable {
             return
         }
         tmuxAttached = true
-        let tmuxCmd = "tmux new-session -A -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on"
+        // attach-session shares the same view with other clients (no grouped session).
+        // Falls back to new-session if the session doesn't exist yet.
+        let tmuxCmd = "tmux attach-session -t \(tmuxName) 2>/dev/null || tmux new-session -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on"
         stLog("\(tmuxName) sendTmuxAttach: \(tmuxCmd)")
         let cmd = tmuxCommand(tmuxCmd, store: store)
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
@@ -300,10 +302,9 @@ public final class Session: Identifiable {
         }
         tmuxAttached = true
         stLog("\(tmuxName) sendTmuxReattach")
-        // Use new-session -A (create-or-attach) for both st-* and discovered sessions.
-        // This handles the case where the tmux session was killed while we were disconnected.
+        // attach-session shares the same view; fall back to new-session if killed while disconnected.
         let cmd = tmuxCommand(
-            "tmux new-session -A -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on",
+            "tmux attach-session -t \(tmuxName) 2>/dev/null || tmux new-session -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on",
             store: store
         )
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
@@ -320,7 +321,7 @@ public final class Session: Identifiable {
             return
         }
         tmuxAttached = true
-        let cmd = "tmux new-session -A -s \(tmuxName) \\; set mouse on"
+        let cmd = "tmux attach-session -t \(tmuxName) 2>/dev/null || tmux new-session -s \(tmuxName) \\; set mouse on"
         stLog("\(tmuxName) sendTmuxAttachExisting: \(cmd)")
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
     }
