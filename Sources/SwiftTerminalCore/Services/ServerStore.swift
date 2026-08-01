@@ -21,15 +21,19 @@ public final class ServerStore {
     }
 
     #if DEBUG
+    /// Debug convenience only. Points at a throwaway SSH server on the developer's own machine
+    /// (`docker run -p 2222:2222 … linuxserver/openssh-server`, user `test`), so the simulator can
+    /// reach a real shell without anyone's production host or credentials being baked in.
     private func addDebugDefaultsIfNeeded() {
         if servers.isEmpty {
             servers = [
                 Server(
-                    name: "Test VPS",
-                    host: "203.0.113.10",
-                    username: "rustam",
-                    authMethod: .key,
-                    tags: ["dev", "test"]
+                    name: "Local test (docker)",
+                    host: "localhost",
+                    port: 2222,
+                    username: "test",
+                    authMethod: .password,
+                    tags: ["local"]
                 )
             ]
             saveServers()

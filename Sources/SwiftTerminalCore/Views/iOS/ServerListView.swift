@@ -85,6 +85,16 @@ public struct ServerListView: View {
             if !sessionManager.sessions.isEmpty {
                 showTerminal = true
             }
+            #if DEBUG
+            // `-autoConnect` opens the first server straight away, so the simulator lands in a
+            // real shell without a tap (clicks can't be scripted into the simulator).
+            if UserDefaults.standard.bool(forKey: "autoConnect"),
+               sessionManager.sessions.isEmpty,
+               let first = store.servers.first {
+                sessionManager.createSession(for: first)
+                showTerminal = true
+            }
+            #endif
         }
     }
 

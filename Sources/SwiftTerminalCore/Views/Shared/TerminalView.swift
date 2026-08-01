@@ -310,6 +310,14 @@ public struct TerminalView: View {
     private func connect() async {
         if session.server.authMethod == .password {
             session.state = .connecting
+            #if DEBUG
+            // `-autoPassword <pw>` skips the prompt so the simulator can reach a real shell
+            // unattended — it cannot be tapped from the command line. Debug builds only.
+            if let auto = UserDefaults.standard.string(forKey: "autoPassword"), !auto.isEmpty {
+                await session.connectWithPassword(auto)
+                return
+            }
+            #endif
             showPasswordPrompt = true
             return
         }
@@ -439,11 +447,14 @@ public struct TerminalViewRepresentable: UIViewRepresentable {
 
     private func attachObservers(to terminalView: SwiftTerm.TerminalView, context: Context) {
         // Listen for keyboard toggle from toolbar button
+        // Hop to the main queue before touching the view, and reach it through the coordinator —
+        // the view is MainActor-isolated and this closure is not, which Swift 6 rejects as a
+        // potential race. Same shape as the keyboard observers below.
         context.coordinator.toggleObserver = NotificationCenter.default.addObserver(
             forName: .toggleTerminalKeyboard, object: nil, queue: .main
-        ) { [weak terminalView] _ in
-            MainActor.assumeIsolated {
-                guard let terminalView else { return }
+        ) { _ in
+            DispatchQueue.main.async {
+                guard let terminalView = context.coordinator.terminalView else { return }
                 if terminalView.isFirstResponder {
                     _ = terminalView.resignFirstResponder()
                 } else {

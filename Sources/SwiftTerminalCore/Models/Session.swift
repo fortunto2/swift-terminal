@@ -95,6 +95,15 @@ public final class Session: Identifiable {
 
         switch server.authMethod {
         case .password:
+            #if DEBUG
+            // `-autoPassword <pw>` lets the simulator reach a real shell without tapping through
+            // the prompt — the simulator cannot be driven by clicks from the command line. Debug
+            // builds only; the App Store build always asks the view layer.
+            if let auto = UserDefaults.standard.string(forKey: "autoPassword"), !auto.isEmpty {
+                await connectWithPassword(auto)
+                return
+            }
+            #endif
             // Password requires UI prompt — handled by the view layer
             break
         case .key:
@@ -174,10 +183,12 @@ public final class Session: Identifiable {
         shellStarted = true
 
         // Wire output → terminal feed
-        sshService.onOutput = { [weak tv] data in
+        sshService.onOutput = { [weak self] data in
             let bytes = Array(data)
             DispatchQueue.main.async {
-                guard let tv else { return }
+                // Read the view off self on the main actor. Capturing the view itself here would
+                // send a MainActor-isolated value into a nonisolated closure, which Swift 6 rejects.
+                guard let tv = self?.terminalView else { return }
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 tv.feed(byteArray: ArraySlice(bytes))
@@ -215,10 +226,12 @@ public final class Session: Identifiable {
         stLog("\(tmuxName) restartShell cols=\(cols) rows=\(rows)")
 
         // Re-wire output → terminal
-        sshService.onOutput = { [weak tv] data in
+        sshService.onOutput = { [weak self] data in
             let bytes = Array(data)
             DispatchQueue.main.async {
-                guard let tv else { return }
+                // Read the view off self on the main actor. Capturing the view itself here would
+                // send a MainActor-isolated value into a nonisolated closure, which Swift 6 rejects.
+                guard let tv = self?.terminalView else { return }
                 CATransaction.begin()
                 CATransaction.setDisableActions(true)
                 tv.feed(byteArray: ArraySlice(bytes))
