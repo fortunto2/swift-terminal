@@ -260,19 +260,34 @@ public final class Session: Identifiable {
             || UserDefaults.standard.bool(forKey: "autoTmux")
     }
 
-    /// Full install-check script — only used on first connection to a server.
+    /// Best-effort tmux install, run once per server on first connection.
+    ///
+    /// Deliberately one line and silent. The shell echoes whatever we write to the PTY, so a
+    /// multi-line script greeted every new connection with a wall of shell code before the prompt.
+    ///
+    /// `sudo -n` is what keeps this from hanging: without it, a server where the account has no
+    /// passwordless sudo stops at `[sudo] password for …` and the session is stuck, because the
+    /// prompt is waiting on a password the app never sends. With `-n` sudo fails immediately and
+    /// we fall through to a plain shell.
     public static let tmuxInstallScript = """
-        if ! command -v tmux >/dev/null 2>&1; then \
-        echo '[st] tmux not found, installing...'; \
-        if command -v apt-get >/dev/null 2>&1; then sudo apt-get update -qq && sudo apt-get install -y -qq tmux; \
-        elif command -v dnf >/dev/null 2>&1; then sudo dnf install -y -q tmux; \
-        elif command -v yum >/dev/null 2>&1; then sudo yum install -y -q tmux; \
-        elif command -v apk >/dev/null 2>&1; then sudo apk add --quiet tmux; \
-        elif command -v brew >/dev/null 2>&1; then brew install tmux; \
-        elif command -v pacman >/dev/null 2>&1; then sudo pacman -S --noconfirm tmux; \
-        else echo '[st] cannot install tmux: unknown package manager'; fi; \
-        fi
+        command -v tmux >/dev/null 2>&1 || \
+        { sudo -n apt-get install -y -qq tmux || sudo -n dnf install -y -q tmux || \
+        sudo -n yum install -y -q tmux || sudo -n apk add --quiet tmux || \
+        sudo -n pacman -S --noconfirm tmux || brew install tmux; } >/dev/null 2>&1 || true
         """
+
+    /// Attach to (or create) this session's tmux, falling back to the plain shell when tmux is
+    /// genuinely unavailable — plenty of servers won't have it and won't let us install it.
+    private func tmuxAttachCommand(create: Bool) -> String {
+        let start = create
+            ? "tmux attach-session -t \(tmuxName) 2>/dev/null || tmux new-session -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on"
+            : "tmux attach-session -t \(tmuxName)"
+        // `clear` on both branches wipes the echoed command itself: the shell prints back
+        // everything written to the PTY, so without it the user's first screen is our own
+        // one-liner instead of their prompt.
+        return "command -v tmux >/dev/null 2>&1 && { clear; \(start); } || "
+            + "{ clear; printf '[st] tmux not available here — using a plain shell\\n'; }"
+    }
 
     /// Build the tmux command, with install check only on first connection to this server.
     private func tmuxCommand(_ tmuxCmd: String, store: ServerStore?) -> String {
@@ -302,7 +317,7 @@ public final class Session: Identifiable {
         tmuxAttached = true
         // attach-session shares the same view with other clients (no grouped session).
         // Falls back to new-session if the session doesn't exist yet.
-        let tmuxCmd = "tmux attach-session -t \(tmuxName) 2>/dev/null || tmux new-session -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on"
+        let tmuxCmd = tmuxAttachCommand(create: true)
         stLog("\(tmuxName) sendTmuxAttach: \(tmuxCmd)")
         let cmd = tmuxCommand(tmuxCmd, store: store)
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
@@ -316,10 +331,7 @@ public final class Session: Identifiable {
         tmuxAttached = true
         stLog("\(tmuxName) sendTmuxReattach")
         // attach-session shares the same view; fall back to new-session if killed while disconnected.
-        let cmd = tmuxCommand(
-            "tmux attach-session -t \(tmuxName) 2>/dev/null || tmux new-session -s \(tmuxName) \\; set mouse on \\; set remain-on-exit on",
-            store: store
-        )
+        let cmd = tmuxCommand(tmuxAttachCommand(create: true), store: store)
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
     }
 
@@ -334,7 +346,7 @@ public final class Session: Identifiable {
             return
         }
         tmuxAttached = true
-        let cmd = "tmux attach-session -t \(tmuxName) 2>/dev/null || tmux new-session -s \(tmuxName) \\; set mouse on"
+        let cmd = tmuxAttachCommand(create: true)
         stLog("\(tmuxName) sendTmuxAttachExisting: \(cmd)")
         sshService.shellWriter.write(Data((cmd + "\n").utf8))
     }
