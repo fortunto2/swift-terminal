@@ -315,6 +315,15 @@ public final class Session: Identifiable {
             return
         }
         tmuxAttached = true
+        #if DEBUG
+        // `-autoCommand "<cmd>"` runs something in the session once it settles — used to capture
+        // store screenshots of a session with real output, since the simulator can't be tapped.
+        if let auto = UserDefaults.standard.string(forKey: "autoCommand"), !auto.isEmpty {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+                self?.sshService.shellWriter.write(Data((auto + "\n").utf8))
+            }
+        }
+        #endif
         // attach-session shares the same view with other clients (no grouped session).
         // Falls back to new-session if the session doesn't exist yet.
         let tmuxCmd = tmuxAttachCommand(create: true)

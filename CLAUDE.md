@@ -85,7 +85,7 @@ mcp__XcodeBuildMCP__build_device   # Build for Rust's iPhone
 ## Test Server
 ```
 Host: 203.0.113.10
-User: rustam
+User: deploy
 Auth: Ed25519 key (no password)
 Device ID: 00008120-0011754C2208201E (Rust's iPhone)
 ```

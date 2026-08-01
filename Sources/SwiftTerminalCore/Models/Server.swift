@@ -92,6 +92,6 @@ extension Server {
     public static let previewList: [Server] = [
         Server(name: "Production", host: "prod.example.com", port: 2222, username: "deploy", tags: ["prod"]),
         Server(name: "Staging", host: "staging.example.com", username: "deploy", tags: ["staging"]),
-        Server(name: "Dev Box", host: "192.168.1.50", username: "rustam", tags: ["dev", "claude"]),
+        Server(name: "Dev Box", host: "192.168.1.50", username: "deploy", tags: ["dev", "claude"]),
     ]
 }
