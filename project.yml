@@ -9,6 +9,9 @@ options:
   generateEmptyDirectories: true
 
 packages:
+  SuperDuperAnalytics:
+    # Локальный путь: пакет в этом же дереве, собираться должна правимая версия.
+    path: ../../shared/superduperai-analytics
   Citadel:
     url: https://github.com/orlandos-nl/Citadel.git
     from: "0.12.0"
@@ -44,12 +47,13 @@ targets:
       - path: Sources/SwiftTerminal
     dependencies:
       - target: SwiftTerminalCore
+      - package: SuperDuperAnalytics
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal
         PRODUCT_NAME: "SuperDuper Terminal"
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "6"
+        CURRENT_PROJECT_VERSION: "7"
         INFOPLIST_GENERATION_MODE: GeneratedByXcode
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
@@ -60,11 +64,11 @@ targets:
         INFOPLIST_KEY_CFBundleDisplayName: "SuperDuper Terminal"
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
         INFOPLIST_KEY_NSFaceIDUsageDescription: "Authenticate to access your SSH private keys"
-        # No ITSAppUsesNonExemptEncryption here on purpose. This app is an SSH client: it
-        # ships its own transport encryption (Citadel/SwiftNIO SSH) and generates keys, which
-        # is not what the "exempt" answer describes — that covers apps whose only crypto is
-        # authentication or the system HTTPS stack. Declaring NO to skip the questionnaire
-        # would be a false export declaration, so App Store Connect asks at upload instead.
+        # An SSH client carries its own transport encryption (Citadel/SwiftNIO SSH) and
+        # generates keys, so the honest answer is YES — the "exempt" answer covers apps whose
+        # only crypto is authentication or the system HTTPS stack. Declared here rather than
+        # left blank because App Store Connect will not accept the value over the public API.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "YES"
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: complete
         ENABLE_PREVIEWS: "YES"
@@ -93,22 +97,23 @@ targets:
       - path: Sources/SwiftTerminal
     dependencies:
       - target: SwiftTerminalCore
+      - package: SuperDuperAnalytics
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal-mac
         PRODUCT_NAME: "SuperDuper Terminal"
         CODE_SIGN_ENTITLEMENTS: SwiftTerminalMac.entitlements
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "6"
+        CURRENT_PROJECT_VERSION: "7"
         INFOPLIST_GENERATION_MODE: GeneratedByXcode
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: "SuperDuper Terminal"
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.developer-tools"
-        # No ITSAppUsesNonExemptEncryption here on purpose. This app is an SSH client: it
-        # ships its own transport encryption (Citadel/SwiftNIO SSH) and generates keys, which
-        # is not what the "exempt" answer describes — that covers apps whose only crypto is
-        # authentication or the system HTTPS stack. Declaring NO to skip the questionnaire
-        # would be a false export declaration, so App Store Connect asks at upload instead.
+        # An SSH client carries its own transport encryption (Citadel/SwiftNIO SSH) and
+        # generates keys, so the honest answer is YES — the "exempt" answer covers apps whose
+        # only crypto is authentication or the system HTTPS stack. Declared here rather than
+        # left blank because App Store Connect will not accept the value over the public API.
+        INFOPLIST_KEY_ITSAppUsesNonExemptEncryption: "YES"
         MACOSX_DEPLOYMENT_TARGET: "15.0"
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: complete
