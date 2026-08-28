@@ -11,7 +11,10 @@ struct GenerateKeyView: View {
     @Environment(ServerStore.self) private var store
     @Environment(\.dismiss) private var dismiss
 
-    @State private var name = ""
+    /// Pre-filled, not empty. On a first launch the onboarding's big "Generate SSH Key" button
+    /// opened this sheet with its own Generate button greyed out and nothing saying why — the
+    /// placeholder reads like a filled field, so the screen looked broken rather than incomplete.
+    @State private var name = "My SSH Key"
     @State private var keyType: SSHKeyType = .ed25519
     @State private var isGenerating = false
     @State private var errorMessage: String?
@@ -92,10 +95,13 @@ struct GenerateKeyView: View {
         errorMessage = nil
 
         let trimmedName = name.trimmingCharacters(in: .whitespaces)
+        // Spaces are legal in an OpenSSH comment but make authorized_keys awkward to read and
+        // to grep, and the default name has one.
+        let slug = trimmedName.replacingOccurrences(of: " ", with: "-")
         #if os(iOS)
-        let comment = "\(trimmedName)@iPhone"
+        let comment = "\(slug)@iPhone"
         #else
-        let comment = "\(trimmedName)@Mac"
+        let comment = "\(slug)@Mac"
         #endif
 
         do {
@@ -116,13 +122,7 @@ struct GenerateKeyView: View {
 
             store.addKey(key)
 
-            // Copy public key to clipboard
-            #if canImport(UIKit)
-            UIPasteboard.general.string = generated.publicKeyOpenSSH
-            #elseif os(macOS)
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(generated.publicKeyOpenSSH, forType: .string)
-            #endif
+            Pasteboard.copy(generated.publicKeyOpenSSH)
 
             isGenerating = false
             dismiss()

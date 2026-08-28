@@ -8,7 +8,7 @@ import SwiftTerm
 /// auto-repeat arrows, input click sounds, and Claude-specific menus.
 ///
 /// ```
-/// Esc │ Ctrl │ Tab │ ~ │ | │ / │ - │ F1..Fn │ ↑ ↓ ← → │ ⌨ │ claude
+/// Esc │ Ctrl │ Tab │ ~ │ | │ / │ - │ F1..Fn │ ↑ ↓ ← → │ ↵ │ ⌨ │ claude
 /// ```
 public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedback {
 
@@ -106,6 +106,11 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
         rightViews.append(makeAutoRepeatButton("arrow.up", #selector(upAction)))
         rightViews.append(makeAutoRepeatButton("arrow.down", #selector(downAction)))
         rightViews.append(makeAutoRepeatButton("arrow.right", #selector(rightAction)))
+
+        // Return. Without it the bar can compose but never commit: the claude menu and the slash
+        // menu both paste text into the prompt, and sending it meant summoning the system
+        // keyboard for one keystroke. Every Claude Code choice list also ends in Enter.
+        rightViews.append(makeButton("", #selector(returnAction), icon: "return", isDark: true))
 
         rightViews.append(makeButton("", #selector(micAction), icon: "mic.fill", isDark: true))
 
@@ -430,6 +435,7 @@ public final class ClaudeCodeAccessoryView: UIInputView, UIInputViewAudioFeedbac
     }
 
     @objc private func escAction() { clickAndSend([0x1B]) }
+    @objc private func returnAction() { clickAndSend([0x0D]) }
     @objc private func tabAction() { clickAndSend([0x09]) }
     @objc private func shiftTabAction() { clickAndSend([0x1B, 0x5B, 0x5A]) }
 

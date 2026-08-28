@@ -12,7 +12,10 @@ public struct AddServerView: View {
     @State private var name = ""
     @State private var host = ""
     @State private var port = 22
-    @State private var username = "root"
+    /// Empty, with "root" as the prompt and as the fallback on save. It used to hold the literal
+    /// string "root" while also showing it as a placeholder, so typing a username appended to it
+    /// and produced "rootdeploy".
+    @State private var username = ""
     @State private var authMethod: AuthMethod = .key
     @State private var selectedKeyID: UUID?
     @State private var tags = ""
@@ -21,11 +24,21 @@ public struct AddServerView: View {
 
     private var isEditing: Bool { existingServer != nil }
 
+    /// Only the host is genuinely required — a name defaults to the host and a username to root,
+    /// so adding the first server is one field instead of three.
     private var isValid: Bool {
-        !name.trimmingCharacters(in: .whitespaces).isEmpty &&
         !host.trimmingCharacters(in: .whitespaces).isEmpty &&
-        !username.trimmingCharacters(in: .whitespaces).isEmpty &&
         port > 0 && port <= 65535
+    }
+
+    private var resolvedName: String {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty ? host.trimmingCharacters(in: .whitespaces) : trimmed
+    }
+
+    private var resolvedUsername: String {
+        let trimmed = username.trimmingCharacters(in: .whitespaces)
+        return trimmed.isEmpty ? "root" : trimmed
     }
 
     public var body: some View {
@@ -35,7 +48,9 @@ public struct AddServerView: View {
                 TextField("Host", text: $host, prompt: Text("192.168.1.1 or example.com"))
                     .autocorrectionDisabled()
                     #if os(iOS)
-                    .textContentType(.URL)
+                    // No .textContentType(.URL): it makes iOS offer a Paste/AutoFill bubble for
+                    // saved website logins, which has nothing to offer an SSH host and parks
+                    // itself on top of the Port field.
                     .textInputAutocapitalization(.never)
                     #endif
                 HStack {
@@ -153,10 +168,10 @@ public struct AddServerView: View {
         .sheet(isPresented: $showingProvisioningView) {
             NavigationStack {
                 ProvisioningView(server: Server(
-                    name: name.isEmpty ? host : name,
-                    host: host,
+                    name: resolvedName,
+                    host: host.trimmingCharacters(in: .whitespaces),
                     port: port,
-                    username: username,
+                    username: resolvedUsername,
                     authMethod: authMethod,
                     keyID: selectedKeyID
                 ))
@@ -172,10 +187,10 @@ public struct AddServerView: View {
 
         let server = Server(
             id: existingServer?.id ?? UUID(),
-            name: name.trimmingCharacters(in: .whitespaces),
+            name: resolvedName,
             host: host.trimmingCharacters(in: .whitespaces),
             port: port,
-            username: username.trimmingCharacters(in: .whitespaces),
+            username: resolvedUsername,
             authMethod: authMethod,
             keyID: selectedKeyID,
             tags: parsedTags,

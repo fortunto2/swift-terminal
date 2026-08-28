@@ -118,7 +118,7 @@ public struct KeyManagementView: View {
     }
 
     private func copyPublicKey(_ key: SSHKey) {
-        UIPasteboard.general.string = key.publicKey
+        Pasteboard.copy(key.publicKey)
     }
 }
 

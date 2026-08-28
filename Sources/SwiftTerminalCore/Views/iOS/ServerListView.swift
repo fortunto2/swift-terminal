@@ -37,7 +37,9 @@ public struct ServerListView: View {
             }
         }
         .navigationTitle("Servers")
-        .searchable(text: $searchText, prompt: "Search servers...")
+        // Only once there is something to search. On a first launch the field floated over the
+        // onboarding card, cut off the Permissions text and buried "Skip Setup" underneath it.
+        .modifier(SearchWhenNotEmpty(text: $searchText, isEnabled: !store.servers.isEmpty))
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 Button {
@@ -127,8 +129,12 @@ public struct ServerListView: View {
             ContentUnavailableView {
                 Label("No Servers", systemImage: "server.rack")
             } description: {
-                if !store.sshKeys.isEmpty {
-                    Text("SSH key ready. Add your first server to connect.")
+                if let key = store.sshKeys.last {
+                    // The step everyone forgets, and the one that makes the first connection
+                    // fail with a bare "authentication failed": the key exists on the phone but
+                    // the server has never heard of it.
+                    Text("Key \"\(key.name)\" is ready. The server needs its public half in "
+                         + "~/.ssh/authorized_keys before it will let you in.")
                 } else {
                     Text("Add your first server to get started.")
                 }
@@ -137,6 +143,13 @@ public struct ServerListView: View {
                     showingAddServer = true
                 }
                 .buttonStyle(.borderedProminent)
+
+                if let key = store.sshKeys.last {
+                    Button("Copy Public Key") {
+                        Pasteboard.copy(key.publicKey)
+                    }
+                    .buttonStyle(.bordered)
+                }
             }
         }
     }
@@ -295,5 +308,19 @@ private struct ServerRow: View {
     }
     .environment(ServerStore())
     .environment(SessionManager())
+}
+/// `.searchable` applied conditionally. Branching inside a modifier rather than at the call site
+/// keeps the ~40 lines of toolbar, sheets and cover that follow it in one branch instead of two.
+private struct SearchWhenNotEmpty: ViewModifier {
+    @Binding var text: String
+    let isEnabled: Bool
+
+    func body(content: Content) -> some View {
+        if isEnabled {
+            content.searchable(text: $text, prompt: "Search servers...")
+        } else {
+            content
+        }
+    }
 }
 #endif

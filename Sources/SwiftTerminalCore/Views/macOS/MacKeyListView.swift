@@ -91,8 +91,7 @@ struct MacKeyListView: View {
             }
             Spacer()
             Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(key.publicKey, forType: .string)
+                Pasteboard.copy(key.publicKey)
             } label: {
                 Image(systemName: "doc.on.doc")
                     .foregroundStyle(.blue)
@@ -108,8 +107,7 @@ struct MacKeyListView: View {
         )
         .contextMenu {
             Button {
-                NSPasteboard.general.clearContents()
-                NSPasteboard.general.setString(key.publicKey, forType: .string)
+                Pasteboard.copy(key.publicKey)
             } label: {
                 Label("Copy Public Key", systemImage: "doc.on.doc")
             }

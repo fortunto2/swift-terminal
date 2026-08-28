@@ -1,6 +1,11 @@
 import SwiftUI
 import SwiftTerm
 import os.log
+#if canImport(UIKit)
+import UIKit
+#elseif os(macOS)
+import AppKit
+#endif
 
 private let scrollLog = Logger(subsystem: "co.superduperai.swift-terminal", category: "scroll")
 
@@ -281,8 +286,28 @@ public struct TerminalView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.teal)
+
+            // The overwhelmingly common cause on a first connection is that the key never made
+            // it to the server, and "check credentials or key" doesn't tell anyone what to do
+            // about it. Hand them the key here rather than sending them back to Settings.
+            if message.localizedCaseInsensitiveContains("authentication"),
+               let key = store.key(for: session.server.keyID) {
+                VStack(spacing: 8) {
+                    Text("The server needs this key's public half in ~/.ssh/authorized_keys.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                    Button("Copy Public Key") {
+                        Pasteboard.copy(key.publicKey)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
+                .padding(.horizontal)
+            }
         }
     }
+
 
     private func reconnectingOverlay(attempt: Int) -> some View {
         VStack(spacing: 16) {
