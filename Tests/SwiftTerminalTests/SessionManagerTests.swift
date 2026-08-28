@@ -360,3 +360,65 @@ struct SessionStateTests {
         }
     }
 }
+
+// MARK: - Tmux over the exec channel
+
+@Suite("Tmux discovery")
+struct TmuxDiscoveryTests {
+    @MainActor
+    @Test("tmuxExec puts Homebrew on PATH")
+    func tmuxExecCarriesHomebrewPath() {
+        let command = SSHService.tmuxExec("list-sessions")
+
+        // sshd runs exec commands through a non-login shell, so a Mac host has no
+        // /opt/homebrew/bin on PATH and plain `tmux` is not found — the discovery then
+        // reads as "no sessions on this server".
+        #expect(command.contains("/opt/homebrew/bin"))
+        #expect(command.contains("/usr/local/bin"))
+        #expect(command.contains("tmux list-sessions"))
+    }
+
+    @Test("Discovered session identity survives a re-read")
+    func sessionInfoIdentityIsStable() {
+        let first = SessionManager.TmuxSessionInfo(
+            name: "cc-api", windowCount: 1, isAttached: false, isOurs: false
+        )
+        // The discovery task re-runs whenever the terminal view reappears, replacing the
+        // array. A per-struct UUID left the picker's selection pointing at the old objects:
+        // rows drew unchecked and "Open" adopted nothing.
+        let reread = SessionManager.TmuxSessionInfo(
+            name: "cc-api", windowCount: 2, isAttached: true, isOurs: false
+        )
+
+        #expect(first.id == reread.id)
+        #expect(first.id != SessionManager.TmuxSessionInfo(
+            name: "cc-web", windowCount: 1, isAttached: false, isOurs: false
+        ).id)
+    }
+}
+
+// MARK: - Connection failure text
+
+@Suite("Failure messages")
+struct FailureMessageTests {
+    let server = Server(name: "Box", host: "example.com", port: 2222, username: "deploy")
+
+    @MainActor
+    @Test("NIO connection errors name the host instead of leaking the type")
+    func nioErrorIsTranslated() {
+        // The real one surfaces as "The operation couldn't be completed.
+        // (NIOPosix.NIOConnectionError error 1.)", which shipped straight to the failure screen.
+        let nio = NSError(domain: "NIOPosix.NIOConnectionError", code: 1)
+        let text = SSHService.describe(nio, server: server)
+
+        #expect(text.contains("example.com:2222"))
+        #expect(!text.contains("NIOConnectionError"))
+    }
+
+    @MainActor
+    @Test("SSH errors keep their own wording")
+    func sshErrorPassesThrough() {
+        let text = SSHService.describe(SSHServiceError.authenticationFailed, server: server)
+        #expect(text.localizedCaseInsensitiveContains("authentication"))
+    }
+}

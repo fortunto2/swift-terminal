@@ -15,8 +15,12 @@ public final class SessionManager {
     // MARK: - Tmux Discovery
 
     /// Info about a discovered tmux session on the remote server.
-    public struct TmuxSessionInfo: Identifiable {
-        public let id = UUID()
+    public struct TmuxSessionInfo: Identifiable, Equatable {
+        /// Identified by tmux name, not a fresh UUID. The discovery task re-runs every time the
+        /// terminal view reappears, so a per-struct UUID left the picker's selection pointing at
+        /// a replaced array: every row drew unchecked while the toolbar still counted two, and
+        /// "Open" adopted nothing. Names are unique within a tmux server, so they are the id.
+        public var id: String { name }
         public let name: String
         public let windowCount: Int
         public let isAttached: Bool
@@ -35,7 +39,8 @@ public final class SessionManager {
 
     /// A remote tmux session with info about whether it's already open locally.
     public struct RemoteTmuxSession: Identifiable {
-        public let id = UUID()
+        /// Same reasoning as TmuxSessionInfo.id — the name is the stable identity.
+        public var id: String { name }
         public let name: String
         public let windowCount: Int
         public let isAttached: Bool
@@ -143,7 +148,7 @@ public final class SessionManager {
                 if probeConnected {
                     do {
                         let output = try await probe.execute(
-                            "tmux list-sessions -F '#{session_name}' 2>/dev/null"
+                            SSHService.tmuxListNames
                         )
                         targetNames = output.split(separator: "\n")
                             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
@@ -318,7 +323,7 @@ public final class SessionManager {
             let remoteNames: Set<String>
             do {
                 let output = try await session.sshService.execute(
-                    "tmux list-sessions -F '#{session_name}' 2>/dev/null"
+                    SSHService.tmuxListNames
                 )
                 remoteNames = Set(
                     output
@@ -402,26 +407,15 @@ public final class SessionManager {
         Task {
             let infos: [TmuxSessionInfo]
             do {
-                let output = try await session.sshService.execute(
-                    "tmux list-sessions -F '#{session_name}:#{session_windows}:#{session_attached}' 2>/dev/null"
-                )
-                infos = output
-                    .split(separator: "\n")
-                    .compactMap { line -> TmuxSessionInfo? in
-                        let parts = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                            .split(separator: ":", maxSplits: 2)
-                        guard parts.count >= 3 else { return nil }
-                        let name = String(parts[0])
-                        let windows = Int(parts[1]) ?? 1
-                        let attached = parts[2] == "1"
-                        let isOurs = name.hasPrefix("st-")
-                        return TmuxSessionInfo(
-                            name: name,
-                            windowCount: windows,
-                            isAttached: attached,
-                            isOurs: isOurs
-                        )
-                    }
+                let output = try await session.sshService.execute(SSHService.tmuxListDetailed)
+                infos = SSHService.TmuxListing.parse(output).map { entry in
+                    TmuxSessionInfo(
+                        name: entry.name,
+                        windowCount: entry.windowCount,
+                        isAttached: entry.isAttached,
+                        isOurs: entry.name.hasPrefix("st-")
+                    )
+                }
             } catch {
                 #if DEBUG
                 print("[SessionManager] tmux discovery failed: \(error)")
@@ -489,24 +483,16 @@ public final class SessionManager {
     public func fetchRemoteTmuxSessions(via session: Session) {
         guard session.state.isConnected else { return }
         let server = session.server
+        remoteTmuxSessions = []
         isFetchingTmuxSessions = true
 
         Task {
             defer { isFetchingTmuxSessions = false }
 
-            let infos: [(name: String, windowCount: Int, isAttached: Bool)]
+            let infos: [SSHService.TmuxListing.Entry]
             do {
-                let output = try await session.sshService.execute(
-                    "bash -lc \"tmux list-sessions -F '#{session_name}:#{session_windows}:#{session_attached}'\" 2>/dev/null"
-                )
-                infos = output
-                    .split(separator: "\n")
-                    .compactMap { line -> (String, Int, Bool)? in
-                        let parts = line.trimmingCharacters(in: .whitespacesAndNewlines)
-                            .split(separator: ":", maxSplits: 2)
-                        guard parts.count >= 3 else { return nil }
-                        return (String(parts[0]), Int(parts[1]) ?? 1, parts[2] == "1")
-                    }
+                let output = try await session.sshService.execute(SSHService.tmuxListDetailed)
+                infos = SSHService.TmuxListing.parse(output)
             } catch {
                 #if DEBUG
                 print("[SessionManager] fetchRemoteTmuxSessions failed: \(error)")
@@ -517,13 +503,12 @@ public final class SessionManager {
 
             // Build list, matching against local sessions for this server
             let localForServer = sessions.filter { $0.server.id == server.id }
-            remoteTmuxSessions = infos.map { name, windowCount, isAttached in
-                let localSession = localForServer.first { $0.tmuxName == name }
-                return RemoteTmuxSession(
-                    name: name,
-                    windowCount: windowCount,
-                    isAttached: isAttached,
-                    localSessionID: localSession?.id
+            remoteTmuxSessions = infos.map { entry in
+                RemoteTmuxSession(
+                    name: entry.name,
+                    windowCount: entry.windowCount,
+                    isAttached: entry.isAttached,
+                    localSessionID: localForServer.first { $0.tmuxName == entry.name }?.id
                 )
             }
 
@@ -569,7 +554,7 @@ public final class SessionManager {
         Task {
             do {
                 _ = try await session.sshService.execute(
-                    "tmux kill-session -t \(name) 2>/dev/null"
+                    SSHService.tmuxExec("kill-session -t \(name) 2>/dev/null")
                 )
                 #if DEBUG
                 print("[SessionManager] killed remote tmux session: \(name)")
@@ -599,7 +584,7 @@ public final class SessionManager {
         Task {
             do {
                 _ = try await session.sshService.execute(
-                    "tmux kill-session -t \(tmuxName) 2>/dev/null"
+                    SSHService.tmuxExec("kill-session -t \(tmuxName) 2>/dev/null")
                 )
             } catch {
                 // Best effort

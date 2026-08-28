@@ -153,6 +153,51 @@ public final class SSHService {
         }
     }
 
+    /// tmux invoked over an exec channel, with the Homebrew prefixes spelled out.
+    ///
+    /// sshd runs an exec command through a non-login, non-interactive shell, so on macOS the PATH
+    /// is whatever `~/.zshenv` leaves behind. `brew shellenv` normally lives in `.zprofile` or
+    /// `.zshrc`, neither of which runs here, so `/opt/homebrew/bin` is missing and `tmux` isn't
+    /// found — the app then reads the empty output as "this server has no sessions". `bash -lc`
+    /// doesn't rescue it either: bash reads `~/.bash_profile`, not the zsh files Homebrew wrote to.
+    /// Linux servers keep tmux in `/usr/bin`, which is why this only ever broke against a Mac.
+    public static func tmuxExec(_ arguments: String) -> String {
+        "PATH=\"$PATH:/opt/homebrew/bin:/usr/local/bin:/opt/local/bin\" tmux \(arguments)"
+    }
+
+    /// Session names only — used when we just need to know what exists.
+    public static let tmuxListNames = tmuxExec("list-sessions -F '#{session_name}' 2>/dev/null")
+
+    /// Name, window count and attached flag, colon-separated. Parse with `TmuxListing.parse`.
+    public static let tmuxListDetailed = tmuxExec(
+        "list-sessions -F '#{session_name}:#{session_windows}:#{session_attached}' 2>/dev/null"
+    )
+
+    /// One parser for `tmuxListDetailed` output, shared by the two discovery paths that both
+    /// read it and used to carry their own copy of this splitting.
+    public enum TmuxListing {
+        public struct Entry {
+            public let name: String
+            public let windowCount: Int
+            public let isAttached: Bool
+        }
+
+        public static func parse(_ output: String) -> [Entry] {
+            output
+                .split(separator: "\n")
+                .compactMap { line in
+                    let parts = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                        .split(separator: ":", maxSplits: 2)
+                    guard parts.count >= 3 else { return nil }
+                    return Entry(
+                        name: String(parts[0]),
+                        windowCount: Int(parts[1]) ?? 1,
+                        isAttached: parts[2] == "1"
+                    )
+                }
+        }
+    }
+
     public func execute(_ command: String) async throws -> String {
         guard let client else {
             throw SSHServiceError.notConnected
@@ -199,6 +244,29 @@ public final class SSHService {
 }
 
 // MARK: - Errors
+
+extension SSHService {
+    /// SwiftNIO reports a refused or unreachable host as
+    /// "The operation couldn't be completed. (NIOPosix.NIOConnectionError error 1.)", which was
+    /// going straight to the failure screen and the server row. Say what actually went wrong.
+    public static func describe(_ error: Error, server: Server) -> String {
+        if let sshError = error as? SSHServiceError, let text = sshError.errorDescription {
+            return text
+        }
+        // Match on the type and the bridged NSError domain, not on String(describing:) — for a
+        // NIO error that already returns the useless "The operation couldn't be completed" text.
+        let raw = "\(type(of: error)) \((error as NSError).domain) \(error)"
+        if raw.contains("NIOConnectionError") || raw.contains("connectTimeout")
+            || raw.contains("ChannelError") {
+            return "Can't reach \(server.host):\(server.port). Check the address and port, "
+                + "and that the server is running and reachable from this network."
+        }
+        if raw.localizedCaseInsensitiveContains("authentication") {
+            return "Authentication failed — the server rejected this key or password."
+        }
+        return error.localizedDescription
+    }
+}
 
 public enum SSHServiceError: LocalizedError {
     case notConnected

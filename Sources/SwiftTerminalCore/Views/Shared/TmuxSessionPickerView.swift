@@ -6,7 +6,7 @@ import SwiftUI
 struct TmuxSessionPickerView: View {
     @Environment(SessionManager.self) private var sessionManager
     @Environment(ServerStore.self) private var store
-    @State private var selected: Set<UUID> = []
+    @State private var selected: Set<String> = []
 
     var body: some View {
         NavigationStack {
@@ -96,9 +96,11 @@ struct TmuxSessionPickerView: View {
                 }
                 #endif
             }
-            .onAppear {
-                // Pre-select all sessions
-                selected = Set(sessionManager.discoveredTmuxSessions.map(\.id))
+            // `initial: true` covers the first paint; the change half matters because discovery
+            // can land after the sheet is on screen, and re-runs whenever the terminal view
+            // reappears — without it a refreshed list would render unchecked.
+            .onChange(of: sessionManager.discoveredTmuxSessions, initial: true) { _, sessions in
+                selected = Set(sessions.map(\.id))
             }
         }
     }

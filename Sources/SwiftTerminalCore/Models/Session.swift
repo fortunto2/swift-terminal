@@ -123,7 +123,7 @@ public final class Session: Identifiable {
             stLog("\(tmuxName) password auth OK")
         } catch {
             stLog("\(tmuxName) password auth FAIL: \(error)")
-            state = .failed(error.localizedDescription)
+            state = .failed(SSHService.describe(error, server: server))
         }
     }
 
@@ -152,7 +152,7 @@ public final class Session: Identifiable {
             stLog("\(tmuxName) key auth OK")
         } catch {
             stLog("\(tmuxName) key auth FAIL: \(error)")
-            state = .failed(error.localizedDescription)
+            state = .failed(SSHService.describe(error, server: server))
         }
     }
 
