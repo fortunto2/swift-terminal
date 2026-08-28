@@ -1,5 +1,5 @@
 {
-  "originHash" : "d845ba74c1ebf5d5e981eff04af3e42fe4b0670b7b530f88e46be061898fa514",
+  "originHash" : "79b02465e133c1ed89a1187ce3861d5900bc64e7c6e47b3b31d7ffe840c12844",
   "pins" : [
     {
       "identity" : "bigint",
@@ -17,6 +17,15 @@
       "state" : {
         "revision" : "a054a77eff9f2ef03051022a096377794dc16140",
         "version" : "0.12.0"
+      }
+    },
+    {
+      "identity" : "superduperai-analytics-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/fortunto2/superduperai-analytics-swift.git",
+      "state" : {
+        "revision" : "88e3db9f34a8a996d0175c856bba436947ac006c",
+        "version" : "1.0.0"
       }
     },
     {

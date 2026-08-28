@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 54;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -17,11 +17,13 @@
 		18FEBBB117B5884FFA024FA7 /* SwiftTerm in Frameworks */ = {isa = PBXBuildFile; productRef = CD701EFE361FDED6CD58870A /* SwiftTerm */; };
 		2031EDCBE60B948DEB9C26B0 /* ProvisioningConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = 565A0CDFFAEFD2BCED8D424C /* ProvisioningConfig.swift */; };
 		2707D46B04C68F1F0CEAF737 /* MacKeyListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9C7CDE810BAFE96451CABAC /* MacKeyListView.swift */; };
+		287AF5AA6E4B42BD1F6DE290 /* Pasteboard.swift in Sources */ = {isa = PBXBuildFile; fileRef = D73EEFAE7E10D947FFA0C0FE /* Pasteboard.swift */; };
 		33CF9AB173DEB211E12F7FEE /* GenerateKeyView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7365A537B41FC3B6726376A7 /* GenerateKeyView.swift */; };
 		3476C737243DA58E70C3681C /* MacQuickCommandsBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = D25336BA354CFB774D8ED284 /* MacQuickCommandsBar.swift */; };
 		3844C544FC9A1AAB35A7892C /* TmuxSessionListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99871C5FEA847E16E0BC3C28 /* TmuxSessionListView.swift */; };
 		3B49288CD6C29E2D291A764D /* Server.swift in Sources */ = {isa = PBXBuildFile; fileRef = F97CB4D805E9DB304962D9E2 /* Server.swift */; };
 		3B4CC468B0DD4EA5E8BEE82B /* TmuxSessionPickerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B0F9B3ABAD3DA7E9160F218 /* TmuxSessionPickerView.swift */; };
+		4438DA969C14A5E420295710 /* SwiftTerminalCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 121AA6F50A4C847590505512 /* SwiftTerminalCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		4D4429D8CC1B5F3E47238D42 /* PortForwardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1F9E800F26D37D78AF09F27D /* PortForwardView.swift */; };
 		4DEC54F2545FE983D17FB063 /* ActiveTerminalContainerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16C3BA63D2924CA2FD9AA058 /* ActiveTerminalContainerView.swift */; };
 		502AA2C18DC1B112C141F509 /* KeychainService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 799CCA5FDBA3A8B7AF64F444 /* KeychainService.swift */; };
@@ -38,7 +40,9 @@
 		867ED1859FA18B3F61A0BD88 /* SwiftTerminalApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 15159432F92F737417104FD4 /* SwiftTerminalApp.swift */; };
 		902EB1350098C177DDC6A9FF /* PersistedSession.swift in Sources */ = {isa = PBXBuildFile; fileRef = EA6DF56A5180922825A855E7 /* PersistedSession.swift */; };
 		93F15C1E4269BA941C8703A5 /* AddServerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6978A79FB20ADA15367468A1 /* AddServerView.swift */; };
+		9D13354564CBDDCFF83C3AD3 /* SuperDuperAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = 016A216CB650CDF3F42D083D /* SuperDuperAnalytics */; };
 		AB75F70539F62CB9F19EB1F4 /* TerminalView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2409679792D2D585C6958FF /* TerminalView.swift */; };
+		B7393B45D6BC2BD1A03192D2 /* SuperDuperAnalytics in Frameworks */ = {isa = PBXBuildFile; productRef = AD23F3836FD9CAD93F6B97B0 /* SuperDuperAnalytics */; };
 		B8164C9B89B7DEBB0D0EC570 /* ClaudeCodeAccessoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E7F3FF9709DE7D4D6EA781FA /* ClaudeCodeAccessoryView.swift */; };
 		B93C37284ED8ADB9E080016B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DA6002CB3A49B7C38B0A9CB8 /* Assets.xcassets */; };
 		BD5F50ABAF6D5D088DF507B7 /* MacServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 851C47F94ECBF28F3BC40244 /* MacServerListView.swift */; };
@@ -52,8 +56,10 @@
 		D46A78A7E9F4017C45374784 /* SSHKeyGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFA896D90FB0B6B928410966 /* SSHKeyGenerator.swift */; };
 		D6458F2DA2C7FF474D700824 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 99762533AE3D3AFE24473922 /* SettingsView.swift */; };
 		D80BC4E363FCCD85D7B6A59A /* SwiftTerminalTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A7540D3E1E822C98C7B95B8 /* SwiftTerminalTests.swift */; };
+		DC44E90B9AF28AAB7C83E960 /* SwiftTerminalCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 121AA6F50A4C847590505512 /* SwiftTerminalCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		E08DF7632778F2237D3A3199 /* SwiftTerminalCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 121AA6F50A4C847590505512 /* SwiftTerminalCore.framework */; };
 		E7A154871D815BCD920C0826 /* ProvisioningScripts.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48208F5949ECD4AE5DDA2DBD /* ProvisioningScripts.swift */; };
+		EA9DAA50BC3FB3EE25792B21 /* SwiftTerminalCore.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 121AA6F50A4C847590505512 /* SwiftTerminalCore.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		F72BFB8FAA9CD243F5AC5659 /* ServerListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BEF710D5408A2B5E6053AF21 /* ServerListView.swift */; };
 /* End PBXBuildFile section */
 
@@ -80,6 +86,42 @@
 			remoteInfo = SwiftTerminalCore;
 		};
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		3E20D089C3D44B3FED60614B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				EA9DAA50BC3FB3EE25792B21 /* SwiftTerminalCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D81F16F4D75F9FAA526CD68B /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				4438DA969C14A5E420295710 /* SwiftTerminalCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		D904743378A182DE8EECFD35 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				DC44E90B9AF28AAB7C83E960 /* SwiftTerminalCore.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		121AA6F50A4C847590505512 /* SwiftTerminalCore.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = SwiftTerminalCore.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -117,6 +159,7 @@
 		C655391F5C755A9F11E43F43 /* PortForward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForward.swift; sourceTree = "<group>"; };
 		D095A5C19D0C48831013DEED /* ServerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStore.swift; sourceTree = "<group>"; };
 		D25336BA354CFB774D8ED284 /* MacQuickCommandsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacQuickCommandsBar.swift; sourceTree = "<group>"; };
+		D73EEFAE7E10D947FFA0C0FE /* Pasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pasteboard.swift; sourceTree = "<group>"; };
 		DA6002CB3A49B7C38B0A9CB8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		DB30E28DBCB93783D07400F6 /* MacSessionsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacSessionsView.swift; sourceTree = "<group>"; };
 		DCB3B76E102399C261FB2C46 /* MacAddServerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacAddServerView.swift; sourceTree = "<group>"; };
@@ -135,6 +178,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				11516AF97C6E5F048151A8AA /* SwiftTerminalCore.framework in Frameworks */,
+				9D13354564CBDDCFF83C3AD3 /* SuperDuperAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -152,6 +196,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				E08DF7632778F2237D3A3199 /* SwiftTerminalCore.framework in Frameworks */,
+				B7393B45D6BC2BD1A03192D2 /* SuperDuperAnalytics in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -179,6 +224,7 @@
 		0C90844ADCAD2677BE1D6611 /* Helpers */ = {
 			isa = PBXGroup;
 			children = (
+				D73EEFAE7E10D947FFA0C0FE /* Pasteboard.swift */,
 				48208F5949ECD4AE5DDA2DBD /* ProvisioningScripts.swift */,
 			);
 			path = Helpers;
@@ -351,6 +397,7 @@
 				E09A0C98B5F9501554BCC11C /* Sources */,
 				32EEE3BBF7B8A51B1D86903F /* Resources */,
 				0EFC84D08C21E2209560D983 /* Frameworks */,
+				D81F16F4D75F9FAA526CD68B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -359,6 +406,7 @@
 			);
 			name = SwiftTerminal;
 			packageProductDependencies = (
+				016A216CB650CDF3F42D083D /* SuperDuperAnalytics */,
 			);
 			productName = SwiftTerminal;
 			productReference = 7449BE6F63CCC4A69330730F /* SwiftTerminal.app */;
@@ -370,6 +418,7 @@
 			buildPhases = (
 				3494B129CDD413A56AB796ED /* Sources */,
 				709689ABBB0C1D9B1620F235 /* Frameworks */,
+				D904743378A182DE8EECFD35 /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -390,6 +439,7 @@
 				4245A0DAD646D9004FFCA514 /* Sources */,
 				C2BE4EB7049290AD5B694B8C /* Resources */,
 				45A637BCA8DD93DC935D12E1 /* Frameworks */,
+				3E20D089C3D44B3FED60614B /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -398,6 +448,7 @@
 			);
 			name = SwiftTerminalMac;
 			packageProductDependencies = (
+				AD23F3836FD9CAD93F6B97B0 /* SuperDuperAnalytics */,
 			);
 			productName = SwiftTerminalMac;
 			productReference = FD32DFD02693E2B38EC0B6C2 /* SwiftTerminalMac.app */;
@@ -423,7 +474,6 @@
 				};
 			};
 			buildConfigurationList = C5393E0D4CA08303E83EC49B /* Build configuration list for PBXProject "SwiftTerminal" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -434,14 +484,16 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				09652DE29EF2E480EAD5C499 /* XCRemoteSwiftPackageReference "Citadel" */,
+				D6DFB5CCAB11D17850F1E177 /* XCRemoteSwiftPackageReference "superduperai-analytics-swift" */,
 				DDADEE3F47D561C841EA0DAB /* XCRemoteSwiftPackageReference "SwiftTerm" */,
 			);
-			preferredProjectObjectVersion = 54;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 159F538AD25A8C24AF2A5180 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				3341A553F145459CDFAB2B52 /* SwiftTerminal */,
 				0E4484CB10B78DD787A574AA /* SwiftTerminalCore */,
+				3341A553F145459CDFAB2B52 /* SwiftTerminal */,
 				DEB82633458A652C4DB6E8D6 /* SwiftTerminalMac */,
 				C29E252009246FD393DAEF09 /* SwiftTerminalTests */,
 			);
@@ -488,6 +540,7 @@
 				BD5F50ABAF6D5D088DF507B7 /* MacServerListView.swift in Sources */,
 				6010A762939CFAADB5A4E5A5 /* MacSessionsView.swift in Sources */,
 				D030CBBC900576D6158FA82D /* OnboardingView.swift in Sources */,
+				287AF5AA6E4B42BD1F6DE290 /* Pasteboard.swift in Sources */,
 				902EB1350098C177DDC6A9FF /* PersistedSession.swift in Sources */,
 				681BAC63729B3F3B770072A1 /* PortForward.swift in Sources */,
 				4D4429D8CC1B5F3E47238D42 /* PortForwardView.swift in Sources */,
@@ -623,13 +676,14 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "SuperDuper Terminal";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -674,13 +728,14 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "SuperDuper Terminal";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -847,12 +902,13 @@
 				CODE_SIGN_ENTITLEMENTS = SwiftTerminal.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "SuperDuper Terminal";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Authenticate to access your SSH private keys";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -885,12 +941,13 @@
 				CODE_SIGN_ENTITLEMENTS = SwiftTerminal.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 6;
+				CURRENT_PROJECT_VERSION = 7;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_GENERATION_MODE = GeneratedByXcode;
 				INFOPLIST_KEY_CFBundleDisplayName = "SuperDuper Terminal";
+				INFOPLIST_KEY_ITSAppUsesNonExemptEncryption = YES;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.developer-tools";
 				INFOPLIST_KEY_NSFaceIDUsageDescription = "Authenticate to access your SSH private keys";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -974,6 +1031,14 @@
 				minimumVersion = 0.12.0;
 			};
 		};
+		D6DFB5CCAB11D17850F1E177 /* XCRemoteSwiftPackageReference "superduperai-analytics-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/fortunto2/superduperai-analytics-swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		DDADEE3F47D561C841EA0DAB /* XCRemoteSwiftPackageReference "SwiftTerm" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/fortunto2/SwiftTerm.git";
@@ -985,10 +1050,20 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		016A216CB650CDF3F42D083D /* SuperDuperAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6DFB5CCAB11D17850F1E177 /* XCRemoteSwiftPackageReference "superduperai-analytics-swift" */;
+			productName = SuperDuperAnalytics;
+		};
 		07327B1A5DCF7DA39CC29226 /* Citadel */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 09652DE29EF2E480EAD5C499 /* XCRemoteSwiftPackageReference "Citadel" */;
 			productName = Citadel;
+		};
+		AD23F3836FD9CAD93F6B97B0 /* SuperDuperAnalytics */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D6DFB5CCAB11D17850F1E177 /* XCRemoteSwiftPackageReference "superduperai-analytics-swift" */;
+			productName = SuperDuperAnalytics;
 		};
 		CD701EFE361FDED6CD58870A /* SwiftTerm */ = {
 			isa = XCSwiftPackageProductDependency;

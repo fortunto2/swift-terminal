@@ -10,8 +10,10 @@ options:
 
 packages:
   SuperDuperAnalytics:
-    # Локальный путь: пакет в этом же дереве, собираться должна правимая версия.
-    path: ../../shared/superduperai-analytics
+    # Remote, not a relative path: Xcode Cloud resolves `../../shared/...` against the
+    # checkout root and fails the archive looking for /Volumes/shared/superduperai-analytics.
+    url: https://github.com/fortunto2/superduperai-analytics-swift.git
+    from: "1.0.0"
   Citadel:
     url: https://github.com/orlandos-nl/Citadel.git
     from: "0.12.0"
