@@ -55,7 +55,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal
         PRODUCT_NAME: "SuperDuper Terminal"
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "7"
+        CURRENT_PROJECT_VERSION: "8"
         INFOPLIST_GENERATION_MODE: GeneratedByXcode
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
@@ -106,7 +106,7 @@ targets:
         PRODUCT_NAME: "SuperDuper Terminal"
         CODE_SIGN_ENTITLEMENTS: SwiftTerminalMac.entitlements
         MARKETING_VERSION: "1.0"
-        CURRENT_PROJECT_VERSION: "7"
+        CURRENT_PROJECT_VERSION: "8"
         INFOPLIST_GENERATION_MODE: GeneratedByXcode
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: "SuperDuper Terminal"
