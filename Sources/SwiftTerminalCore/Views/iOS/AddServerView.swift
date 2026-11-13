@@ -201,6 +201,7 @@ public struct AddServerView: View {
             store.updateServer(server)
         } else {
             store.addServer(server)
+            Telemetry.track("host_added", ["auth": server.authMethod.rawValue])
         }
     }
 }

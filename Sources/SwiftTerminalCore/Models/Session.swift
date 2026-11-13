@@ -116,21 +116,27 @@ public final class Session: Identifiable {
     public func connectWithPassword(_ password: String) async {
         stLog("\(tmuxName) connectWithPassword")
         state = .connecting
+        Telemetry.track("connect_started", ["auth": "password"])
         do {
             try await sshService.connect(to: server, password: password)
             state = .connected
             lastActivity = .now
+            connectedSince = .now
+            Telemetry.track("connect_succeeded", ["auth": "password"])
             stLog("\(tmuxName) password auth OK")
         } catch {
             stLog("\(tmuxName) password auth FAIL: \(error)")
+            Telemetry.track("connect_failed", ["auth": "password", "reason": Telemetry.failureReason(error).rawValue])
             state = .failed(SSHService.describe(error, server: server))
         }
     }
 
     private func connectWithKey(using store: ServerStore) async {
+        Telemetry.track("connect_started", ["auth": "key"])
         guard let keyID = server.keyID,
               let sshKey = store.key(for: keyID) else {
             stLog("\(tmuxName) no SSH key assigned")
+            Telemetry.track("connect_failed", ["auth": "key", "reason": Telemetry.FailureReason.other.rawValue])
             state = .failed("No SSH key assigned to this server")
             return
         }
@@ -149,9 +155,12 @@ public final class Session: Identifiable {
             )
             state = .connected
             lastActivity = .now
+            connectedSince = .now
+            Telemetry.track("connect_succeeded", ["auth": "key"])
             stLog("\(tmuxName) key auth OK")
         } catch {
             stLog("\(tmuxName) key auth FAIL: \(error)")
+            Telemetry.track("connect_failed", ["auth": "key", "reason": Telemetry.failureReason(error).rawValue])
             state = .failed(SSHService.describe(error, server: server))
         }
     }
@@ -304,6 +313,7 @@ public final class Session: Identifiable {
     }
 
     private var tmuxAttached = false
+    private var connectedSince: Date?
 
     public func sendTmuxAttach(store: ServerStore? = nil) {
         guard isTmuxEnabled else {
@@ -315,6 +325,7 @@ public final class Session: Identifiable {
             return
         }
         tmuxAttached = true
+        Telemetry.track("tmux_attached")
         #if DEBUG
         // `-autoCommand "<cmd>"` runs something in the session once it settles — used to capture
         // store screenshots of a session with real output, since the simulator can't be tapped.
@@ -490,6 +501,10 @@ public final class Session: Identifiable {
 
     public func disconnect() async {
         stLog("\(tmuxName) disconnect()")
+        if let since = connectedSince {
+            Telemetry.track("session_ended", ["duration": Telemetry.durationBucket(Date.now.timeIntervalSince(since))])
+            connectedSince = nil
+        }
         reconnectTask?.cancel()
         reconnectTask = nil
         for fwd in activeForwards { fwd.stop() }

@@ -17,6 +17,10 @@ struct SwiftTerminalApp: App {
         guard !ProcessInfo.processInfo.arguments.contains("-uiTesting") else { return }
         Analytics.configure(source: "swift-terminal")
         Analytics.track("app_launched")
+        // Events from the core library. See Telemetry.swift for what may and may not go in.
+        Telemetry.sink = { name, props in
+            Analytics.track(name, props: props)
+        }
     }
 
     var body: some Scene {
@@ -30,18 +34,9 @@ struct SwiftTerminalApp: App {
         #if os(macOS)
         .defaultSize(width: 900, height: 600)
         .commands {
-            CommandGroup(replacing: .newItem) {
-                Button("New Connection") {
-                    // Post notification that ServerListView can listen to
-                }
-                .keyboardShortcut("n")
-            }
-            CommandGroup(after: .textEditing) {
-                Button("Clear Terminal") {
-                    // Cmd+K — clear terminal
-                }
-                .keyboardShortcut("k")
-            }
+            // Both items used to be buttons with empty bodies. A menu entry that does nothing
+            // is worse than none; the window is single, so File > New goes too.
+            CommandGroup(replacing: .newItem) {}
         }
         #endif
         .environment(serverStore)
