@@ -14,3 +14,4 @@ DerivedData/
 # SSH test keys
 test-server.key
 test-server.pub
+_work/

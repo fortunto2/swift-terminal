@@ -34,6 +34,7 @@
 		5CF73CE2EC484BB39919F1F3 /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 07327B1A5DCF7DA39CC29226 /* Citadel */; };
 		5FFA2AD1000C4B9220F341AD /* SSHService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7516F009307BDDB0AC84493F /* SSHService.swift */; };
 		6010A762939CFAADB5A4E5A5 /* MacSessionsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB30E28DBCB93783D07400F6 /* MacSessionsView.swift */; };
+		61D6DA3CB9BDA24F797E949C /* Telemetry.swift in Sources */ = {isa = PBXBuildFile; fileRef = D150BB0798705D13677C9757 /* Telemetry.swift */; };
 		650F02763F7DA6B206741C41 /* LockScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 390D9AE33E96AF458369B1B9 /* LockScreenView.swift */; };
 		681BAC63729B3F3B770072A1 /* PortForward.swift in Sources */ = {isa = PBXBuildFile; fileRef = C655391F5C755A9F11E43F43 /* PortForward.swift */; };
 		71B3324619E93E3B858F9C2B /* MacMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFA3E94C88BBC7029CEBE9C /* MacMainView.swift */; };
@@ -158,6 +159,7 @@
 		BFFA3E94C88BBC7029CEBE9C /* MacMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacMainView.swift; sourceTree = "<group>"; };
 		C655391F5C755A9F11E43F43 /* PortForward.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForward.swift; sourceTree = "<group>"; };
 		D095A5C19D0C48831013DEED /* ServerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerStore.swift; sourceTree = "<group>"; };
+		D150BB0798705D13677C9757 /* Telemetry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Telemetry.swift; sourceTree = "<group>"; };
 		D25336BA354CFB774D8ED284 /* MacQuickCommandsBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MacQuickCommandsBar.swift; sourceTree = "<group>"; };
 		D73EEFAE7E10D947FFA0C0FE /* Pasteboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Pasteboard.swift; sourceTree = "<group>"; };
 		DA6002CB3A49B7C38B0A9CB8 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -226,6 +228,7 @@
 			children = (
 				D73EEFAE7E10D947FFA0C0FE /* Pasteboard.swift */,
 				48208F5949ECD4AE5DDA2DBD /* ProvisioningScripts.swift */,
+				D150BB0798705D13677C9757 /* Telemetry.swift */,
 			);
 			path = Helpers;
 			sourceTree = "<group>";
@@ -558,6 +561,7 @@
 				0C5F22022A43D319730FCA2B /* SessionManager.swift in Sources */,
 				097C0601E9AC19900BDF36E1 /* SessionTabStrip.swift in Sources */,
 				D6458F2DA2C7FF474D700824 /* SettingsView.swift in Sources */,
+				61D6DA3CB9BDA24F797E949C /* Telemetry.swift in Sources */,
 				AB75F70539F62CB9F19EB1F4 /* TerminalView.swift in Sources */,
 				3844C544FC9A1AAB35A7892C /* TmuxSessionListView.swift in Sources */,
 				3B4CC468B0DD4EA5E8BEE82B /* TmuxSessionPickerView.swift in Sources */,
@@ -676,7 +680,7 @@
 				CODE_SIGN_IDENTITY = "Apple Distribution";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -727,7 +731,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
@@ -836,7 +840,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -867,7 +871,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "";
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEFINES_MODULE = YES;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
@@ -902,7 +906,7 @@
 				CODE_SIGN_ENTITLEMENTS = SwiftTerminal.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -940,7 +944,7 @@
 				CODE_SIGN_ENTITLEMENTS = SwiftTerminal.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 9;
+				CURRENT_PROJECT_VERSION = 10;
 				DEVELOPMENT_TEAM = 8N495BBBLM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;

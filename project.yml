@@ -40,7 +40,7 @@ targets:
         # Without these the generated framework plist carries CFBundleVersion but no
         # CFBundleShortVersionString, and the upload is rejected with ITMS-90057.
         MARKETING_VERSION: "1.0.1"
-        CURRENT_PROJECT_VERSION: "9"
+        CURRENT_PROJECT_VERSION: "10"
         SWIFT_VERSION: "6.0"
         SWIFT_STRICT_CONCURRENCY: complete
         MACH_O_TYPE: staticlib
@@ -59,7 +59,7 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: co.superduperai.swift-terminal
         PRODUCT_NAME: "SuperDuper Terminal"
         MARKETING_VERSION: "1.0.1"
-        CURRENT_PROJECT_VERSION: "9"
+        CURRENT_PROJECT_VERSION: "10"
         INFOPLIST_GENERATION_MODE: GeneratedByXcode
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: "YES"
@@ -117,7 +117,7 @@ targets:
         PRODUCT_NAME: "SuperDuper Terminal"
         CODE_SIGN_ENTITLEMENTS: SwiftTerminalMac.entitlements
         MARKETING_VERSION: "1.0.1"
-        CURRENT_PROJECT_VERSION: "9"
+        CURRENT_PROJECT_VERSION: "10"
         INFOPLIST_GENERATION_MODE: GeneratedByXcode
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: "SuperDuper Terminal"
